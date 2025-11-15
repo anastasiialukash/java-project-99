@@ -1,4 +1,4 @@
-package hexlet.code.app.controller;
+package hexlet.code.controller;
 
 public class WelcomeController {
 }
