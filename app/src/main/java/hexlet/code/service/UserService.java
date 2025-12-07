@@ -25,9 +25,7 @@ public class UserService {
     private PasswordEncoderService passwordEncoder;
 
     public List<UserDTO> getAllUsers() {
-        return userRepository.findAll().stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+        return userRepository.findAll().stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
     public UserDTO getUserById(Long id) {
@@ -44,7 +42,7 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(userCreateDTO.getPassword()));
         user.setCreatedAt(Instant.now());
         user.setUpdatedAt(Instant.now());
-        
+
         User savedUser = userRepository.save(user);
         return convertToDTO(savedUser);
     }
@@ -56,19 +54,19 @@ public class UserService {
         if (userUpdateDTO.getFirstName() != null) {
             user.setFirstName(userUpdateDTO.getFirstName());
         }
-        
+
         if (userUpdateDTO.getLastName() != null) {
             user.setLastName(userUpdateDTO.getLastName());
         }
-        
+
         if (userUpdateDTO.getEmail() != null) {
             user.setEmail(userUpdateDTO.getEmail());
         }
-        
+
         if (userUpdateDTO.getPassword() != null) {
             user.setPassword(passwordEncoder.encode(userUpdateDTO.getPassword()));
         }
-        
+
         user.setUpdatedAt(Instant.now());
         User updatedUser = userRepository.save(user);
         return convertToDTO(updatedUser);

@@ -1,10 +1,16 @@
 package hexlet.code.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hexlet.code.dto.UserCreateDTO;
 import hexlet.code.dto.UserUpdateDTO;
 import hexlet.code.model.User;
 import hexlet.code.repository.UserRepository;
+import java.time.Instant;
+import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,13 +20,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.time.Instant;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -57,10 +56,8 @@ public class UserControllerTest {
 
     @Test
     void testGetAllUsers() throws Exception {
-        mockMvc.perform(get("/api/users"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$").isArray())
+        mockMvc.perform(get("/api/users")).andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON)).andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$[0].id").value(testUser.getId()))
                 .andExpect(jsonPath("$[0].email").value(testUser.getEmail()))
                 .andExpect(jsonPath("$[0].firstName").value(testUser.getFirstName()))
@@ -70,8 +67,7 @@ public class UserControllerTest {
 
     @Test
     void testGetUserById() throws Exception {
-        mockMvc.perform(get("/api/users/{id}", testUser.getId()))
-                .andExpect(status().isOk())
+        mockMvc.perform(get("/api/users/{id}", testUser.getId())).andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(testUser.getId()))
                 .andExpect(jsonPath("$.email").value(testUser.getEmail()))
@@ -88,10 +84,8 @@ public class UserControllerTest {
         newUser.setLastName("User");
         newUser.setPassword("newpassword");
 
-        mockMvc.perform(post("/api/users")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(newUser)))
-                .andExpect(status().isCreated())
+        mockMvc.perform(post("/api/users").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(newUser))).andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.email").value(newUser.getEmail()))
                 .andExpect(jsonPath("$.firstName").value(newUser.getFirstName()))
@@ -109,10 +103,8 @@ public class UserControllerTest {
         updateUser.setEmail("updated@example.com");
         updateUser.setFirstName("Updated");
 
-        mockMvc.perform(put("/api/users/{id}", testUser.getId())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateUser)))
-                .andExpect(status().isOk())
+        mockMvc.perform(put("/api/users/{id}", testUser.getId()).contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateUser))).andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(testUser.getId()))
                 .andExpect(jsonPath("$.email").value(updateUser.getEmail()))
@@ -128,8 +120,7 @@ public class UserControllerTest {
 
     @Test
     void testDeleteUser() throws Exception {
-        mockMvc.perform(delete("/api/users/{id}", testUser.getId()))
-                .andExpect(status().isNoContent());
+        mockMvc.perform(delete("/api/users/{id}", testUser.getId())).andExpect(status().isNoContent());
 
         assertThat(userRepository.existsById(testUser.getId())).isFalse();
     }
@@ -142,10 +133,8 @@ public class UserControllerTest {
         invalidUser.setLastName("User");
         invalidUser.setPassword("pw");
 
-        mockMvc.perform(post("/api/users")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(invalidUser)))
-                .andExpect(status().isBadRequest());
+        mockMvc.perform(post("/api/users").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(invalidUser))).andExpect(status().isBadRequest());
 
         assertThat(userRepository.count()).isEqualTo(1);
     }
@@ -155,10 +144,8 @@ public class UserControllerTest {
         UserUpdateDTO invalidUpdate = new UserUpdateDTO();
         invalidUpdate.setEmail("invalid-email");
 
-        mockMvc.perform(put("/api/users/{id}", testUser.getId())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(invalidUpdate)))
-                .andExpect(status().isBadRequest());
+        mockMvc.perform(put("/api/users/{id}", testUser.getId()).contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(invalidUpdate))).andExpect(status().isBadRequest());
 
         User unchangedUser = userRepository.findById(testUser.getId()).orElseThrow();
         assertThat(unchangedUser.getEmail()).isEqualTo(testUser.getEmail());
@@ -166,8 +153,7 @@ public class UserControllerTest {
 
     @Test
     void testGetNonExistentUser() throws Exception {
-        mockMvc.perform(get("/api/users/999"))
-                .andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/users/999")).andExpect(status().isNotFound());
     }
 
     @Test
@@ -175,15 +161,12 @@ public class UserControllerTest {
         UserUpdateDTO updateUser = new UserUpdateDTO();
         updateUser.setEmail("updated@example.com");
 
-        mockMvc.perform(put("/api/users/999")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateUser)))
-                .andExpect(status().isNotFound());
+        mockMvc.perform(put("/api/users/999").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateUser))).andExpect(status().isNotFound());
     }
 
     @Test
     void testDeleteNonExistentUser() throws Exception {
-        mockMvc.perform(delete("/api/users/999"))
-                .andExpect(status().isNotFound());
+        mockMvc.perform(delete("/api/users/999")).andExpect(status().isNotFound());
     }
 }

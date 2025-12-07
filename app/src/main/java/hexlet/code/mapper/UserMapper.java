@@ -14,9 +14,7 @@ import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.ReportingPolicy;
 
-@Mapper(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE, 
-        componentModel = MappingConstants.ComponentModel.SPRING, 
-        unmappedTargetPolicy = ReportingPolicy.IGNORE)
+@Mapper(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE, componentModel = MappingConstants.ComponentModel.SPRING, unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface UserMapper {
 
     @Mapping(target = "id", ignore = true)
@@ -37,10 +35,8 @@ public interface UserMapper {
     default Instant getCurrentTime() {
         return Instant.now();
     }
-    
+
     default LocalDate convertToLocalDate(Instant instant) {
-        return instant != null 
-            ? instant.atZone(ZoneId.systemDefault()).toLocalDate() 
-            : null;
+        return instant != null ? instant.atZone(ZoneId.systemDefault()).toLocalDate() : null;
     }
 }

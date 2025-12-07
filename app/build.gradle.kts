@@ -30,9 +30,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-security")
-    implementation("org.mapstruct:mapstruct")
-    implementation("org.openapitools:jackson-databind-nullable")
-    annotationProcessor("org.mapstruct:mapstruct-processor")
+    implementation("org.mapstruct:mapstruct:1.6.3")
+    implementation("org.openapitools:jackson-databind-nullable:0.2.8")
+    annotationProcessor("org.mapstruct:mapstruct-processor:1.6.3")
     annotationProcessor("org.projectlombok:lombok")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -60,12 +60,3 @@ tasks.jacocoTestReport {
     }
 }
 
-spotless {
-    java {
-        importOrder()
-        removeUnusedImports()
-        eclipse()
-        formatAnnotations()
-        indentWithSpaces(4)
-    }
-}

@@ -22,16 +22,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/users")
 public class UsersController {
-    
+
     @Autowired
     private UserService userService;
 
     @GetMapping
     public ResponseEntity<List<UserDTO>> getAllUsers() {
         List<UserDTO> users = userService.getAllUsers();
-        return ResponseEntity.ok()
-                .header("X-Total-Count", String.valueOf(users.size()))
-                .body(users);
+        return ResponseEntity.ok().header("X-Total-Count", String.valueOf(users.size())).body(users);
     }
 
     @GetMapping("/{id}")
@@ -47,8 +45,7 @@ public class UsersController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, 
-                                             @Valid @RequestBody UserUpdateDTO userUpdateDTO) {
+    public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateDTO userUpdateDTO) {
         UserDTO updatedUser = userService.updateUser(id, userUpdateDTO);
         return ResponseEntity.ok(updatedUser);
     }
