@@ -1,5 +1,6 @@
 package hexlet.code.dto;
 
+import java.time.LocalDate;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,11 +9,11 @@ import lombok.Setter;
 public class UserDTO {
     private Long id;
 
-    private String username;
+    private String email;
 
     private String firstName;
 
     private String lastName;
 
-    private String password;
+    private LocalDate createdAt;
 }
