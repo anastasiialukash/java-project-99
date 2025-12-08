@@ -1,9 +1,10 @@
 package hexlet.code.mapper;
 
-import java.lang.reflect.InvocationTargetException;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.TargetType;
+
+import java.lang.reflect.InvocationTargetException;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public class ReferenceMapper {
@@ -15,7 +16,6 @@ public class ReferenceMapper {
 
         try {
             T entity = entityClass.getDeclaredConstructor().newInstance();
-            // Assuming all entity classes have a setId method
             entityClass.getMethod("setId", Long.class).invoke(entity, id);
             return entity;
         } catch (NoSuchMethodException | InstantiationException | IllegalAccessException
