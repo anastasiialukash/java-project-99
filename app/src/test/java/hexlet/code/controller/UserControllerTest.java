@@ -1,16 +1,11 @@
 package hexlet.code.controller;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
+import hexlet.code.dto.LoginRequestDTO;
 import hexlet.code.dto.UserCreateDTO;
 import hexlet.code.dto.UserUpdateDTO;
 import hexlet.code.model.User;
 import hexlet.code.repository.UserRepository;
-import java.time.Instant;
-import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,8 +13,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.time.Instant;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -34,8 +42,12 @@ public class UserControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     private User testUser;
+    private final String TEST_PASSWORD = "password";
 
     @BeforeEach
     void setUp() {
@@ -43,10 +55,24 @@ public class UserControllerTest {
         testUser.setEmail("test@example.com");
         testUser.setFirstName("Test");
         testUser.setLastName("User");
-        testUser.setPassword("password");
+        testUser.setPassword(passwordEncoder.encode(TEST_PASSWORD));
         testUser.setCreatedAt(Instant.now());
         testUser.setUpdatedAt(Instant.now());
         userRepository.save(testUser);
+    }
+    
+    private String getToken(String username, String password) throws Exception {
+        LoginRequestDTO loginRequest = new LoginRequestDTO();
+        loginRequest.setUsername(username);
+        loginRequest.setPassword(password);
+
+        return mockMvc.perform(post("/api/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(loginRequest)))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
     }
 
     @AfterEach
@@ -73,7 +99,7 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.email").value(testUser.getEmail()))
                 .andExpect(jsonPath("$.firstName").value(testUser.getFirstName()))
                 .andExpect(jsonPath("$.lastName").value(testUser.getLastName()))
-                .andExpect(jsonPath("$.password").doesNotExist()); // Password should not be returned
+                .andExpect(jsonPath("$.password").doesNotExist());
     }
 
     @Test
@@ -90,7 +116,7 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.email").value(newUser.getEmail()))
                 .andExpect(jsonPath("$.firstName").value(newUser.getFirstName()))
                 .andExpect(jsonPath("$.lastName").value(newUser.getLastName()))
-                .andExpect(jsonPath("$.password").doesNotExist()); // Password should not be returned
+                .andExpect(jsonPath("$.password").doesNotExist());
 
         List<User> users = userRepository.findAll();
         assertThat(users).hasSize(2);
@@ -103,24 +129,32 @@ public class UserControllerTest {
         updateUser.setEmail("updated@example.com");
         updateUser.setFirstName("Updated");
 
-        mockMvc.perform(put("/api/users/{id}", testUser.getId()).contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateUser))).andExpect(status().isOk())
+        String token = getToken(testUser.getEmail(), TEST_PASSWORD);
+
+        mockMvc.perform(put("/api/users/{id}", testUser.getId())
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateUser)))
+                .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(testUser.getId()))
                 .andExpect(jsonPath("$.email").value(updateUser.getEmail()))
                 .andExpect(jsonPath("$.firstName").value(updateUser.getFirstName()))
-                .andExpect(jsonPath("$.lastName").value(testUser.getLastName())) // Should remain unchanged
-                .andExpect(jsonPath("$.password").doesNotExist()); // Password should not be returned
-
+                .andExpect(jsonPath("$.lastName").value(testUser.getLastName()))
+                .andExpect(jsonPath("$.password").doesNotExist());
         User updatedUser = userRepository.findById(testUser.getId()).orElseThrow();
         assertThat(updatedUser.getEmail()).isEqualTo(updateUser.getEmail());
         assertThat(updatedUser.getFirstName()).isEqualTo(updateUser.getFirstName());
-        assertThat(updatedUser.getLastName()).isEqualTo(testUser.getLastName()); // Should remain unchanged
+        assertThat(updatedUser.getLastName()).isEqualTo(testUser.getLastName());
     }
 
     @Test
     void testDeleteUser() throws Exception {
-        mockMvc.perform(delete("/api/users/{id}", testUser.getId())).andExpect(status().isNoContent());
+        String token = getToken(testUser.getEmail(), TEST_PASSWORD);
+        
+        mockMvc.perform(delete("/api/users/{id}", testUser.getId())
+                .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNoContent());
 
         assertThat(userRepository.existsById(testUser.getId())).isFalse();
     }
