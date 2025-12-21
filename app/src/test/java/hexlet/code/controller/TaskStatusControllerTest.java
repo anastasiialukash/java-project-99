@@ -2,7 +2,7 @@ package hexlet.code.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hexlet.code.dto.LoginRequestDTO;
-import hexlet.code.dto.TaskCreateDTO;
+import hexlet.code.dto.TaskStatusCreateDTO;
 import hexlet.code.dto.TaskStatusDTO;
 import hexlet.code.model.TaskStatus;
 import hexlet.code.model.User;
@@ -23,10 +23,10 @@ import java.time.Instant;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -120,7 +120,7 @@ public class TaskStatusControllerTest {
     void testCreateStatus() throws Exception {
         String token = getToken(testUser.getEmail(), TEST_PASSWORD);
         
-        TaskCreateDTO newStatus = new TaskCreateDTO();
+        TaskStatusCreateDTO newStatus = new TaskStatusCreateDTO();
         newStatus.setName("New Status");
         newStatus.setSlug("new_status");
         
@@ -140,7 +140,7 @@ public class TaskStatusControllerTest {
     
     @Test
     void testCreateStatusWithoutAuthentication() throws Exception {
-        TaskCreateDTO newStatus = new TaskCreateDTO();
+        TaskStatusCreateDTO newStatus = new TaskStatusCreateDTO();
         newStatus.setName("New Status");
         newStatus.setSlug("new_status");
         
@@ -148,11 +148,8 @@ public class TaskStatusControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newStatus)))
                 .andExpect(status().isUnauthorized());
-        
-        // Count statuses after the request - should be the same as before
-        // (default statuses + our test status)
+
         int statusCount = taskStatusRepository.findAll().size();
-        // Verify our test status exists but no new status was added
         assertThat(taskStatusRepository.findBySlug("new_status").isEmpty()).isTrue();
     }
     

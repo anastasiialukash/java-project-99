@@ -6,6 +6,7 @@ import hexlet.code.dto.UserUpdateDTO;
 import hexlet.code.exception.ForbiddenException;
 import hexlet.code.exception.ResourceNotFoundException;
 import hexlet.code.model.User;
+import hexlet.code.repository.TaskRepository;
 import hexlet.code.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -27,6 +28,9 @@ public class UserService {
 
     @Autowired
     private PasswordEncoderService passwordEncoder;
+    
+    @Autowired
+    private TaskRepository taskRepository;
 
     public List<UserDTO> getAllUsers() {
         return userRepository.findAll().stream().map(this::convertToDTO).collect(Collectors.toList());
@@ -83,6 +87,10 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
 
         checkUserAuthorization(user.getEmail());
+
+        if (!taskRepository.findByAssignee(user).isEmpty()) {
+            throw new ForbiddenException("Cannot delete user because they are assigned to one or more tasks");
+        }
         
         userRepository.deleteById(id);
     }

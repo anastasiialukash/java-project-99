@@ -1,9 +1,11 @@
 package hexlet.code.service;
 
-import hexlet.code.dto.TaskCreateDTO;
+import hexlet.code.dto.TaskStatusCreateDTO;
 import hexlet.code.dto.TaskStatusDTO;
+import hexlet.code.exception.ForbiddenException;
 import hexlet.code.exception.ResourceNotFoundException;
 import hexlet.code.model.TaskStatus;
+import hexlet.code.repository.TaskRepository;
 import hexlet.code.repository.TaskStatusRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,9 @@ public class TaskStatusService {
 
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private TaskRepository taskRepository;
 
     public List<TaskStatusDTO> getAllStatuses() {
         return taskStatusRepository.findAll().stream().map(this::convertToDTO).collect(Collectors.toList());
@@ -38,7 +43,7 @@ public class TaskStatusService {
         return convertToDTO(status);
     }
 
-    public TaskStatusDTO createStatus(TaskCreateDTO taskStatusCreateDTO) {
+    public TaskStatusDTO createStatus(TaskStatusCreateDTO taskStatusCreateDTO) {
         TaskStatus taskStatus = new TaskStatus();
         taskStatus.setName(taskStatusCreateDTO.getName());
         taskStatus.setSlug(taskStatusCreateDTO.getSlug());
@@ -70,6 +75,10 @@ public class TaskStatusService {
                 .orElseThrow(() -> new ResourceNotFoundException("Task status not found with id: " + id));
 
         userService.checkUserAuthorization(username);
+
+        if (!taskRepository.findByTaskStatus(taskStatus).isEmpty()) {
+            throw new ForbiddenException("Cannot delete task status because it is used by one or more tasks");
+        }
 
         taskStatusRepository.deleteById(id);
     }

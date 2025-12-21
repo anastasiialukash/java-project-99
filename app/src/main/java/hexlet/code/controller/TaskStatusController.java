@@ -1,6 +1,6 @@
 package hexlet.code.controller;
 
-import hexlet.code.dto.TaskCreateDTO;
+import hexlet.code.dto.TaskStatusCreateDTO;
 import hexlet.code.dto.TaskStatusDTO;
 import hexlet.code.service.TaskStatusService;
 import jakarta.validation.Valid;
@@ -46,7 +46,7 @@ public class TaskStatusController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public TaskStatusDTO createStatus(@Valid @RequestBody TaskCreateDTO taskStatusCreateDTO) {
+    public TaskStatusDTO createStatus(@Valid @RequestBody TaskStatusCreateDTO taskStatusCreateDTO) {
         return taskStatusService.createStatus(taskStatusCreateDTO);
     }
 
