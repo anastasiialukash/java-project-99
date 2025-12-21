@@ -31,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
+@ActiveProfiles("dev")
 public class UserControllerTest {
 
     @Autowired
@@ -177,8 +177,12 @@ public class UserControllerTest {
     void testUpdateUserWithInvalidData() throws Exception {
         UserUpdateDTO invalidUpdate = new UserUpdateDTO();
         invalidUpdate.setEmail("invalid-email");
+        
+        String token = getToken(testUser.getEmail(), TEST_PASSWORD);
 
-        mockMvc.perform(put("/api/users/{id}", testUser.getId()).contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(put("/api/users/{id}", testUser.getId())
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(invalidUpdate))).andExpect(status().isBadRequest());
 
         User unchangedUser = userRepository.findById(testUser.getId()).orElseThrow();
@@ -194,13 +198,21 @@ public class UserControllerTest {
     void testUpdateNonExistentUser() throws Exception {
         UserUpdateDTO updateUser = new UserUpdateDTO();
         updateUser.setEmail("updated@example.com");
+        
+        String token = getToken(testUser.getEmail(), TEST_PASSWORD);
 
-        mockMvc.perform(put("/api/users/999").contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(put("/api/users/999")
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateUser))).andExpect(status().isNotFound());
     }
 
     @Test
     void testDeleteNonExistentUser() throws Exception {
-        mockMvc.perform(delete("/api/users/999")).andExpect(status().isNotFound());
+        String token = getToken(testUser.getEmail(), TEST_PASSWORD);
+        
+        mockMvc.perform(delete("/api/users/999")
+                .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNotFound());
     }
 }

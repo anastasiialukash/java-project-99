@@ -93,7 +93,7 @@ public class UserService {
      * 
      * @param userEmail The email of the user being operated on
      */
-    private void checkUserAuthorization(String userEmail) {
+    public void checkUserAuthorization(String userEmail) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new ForbiddenException("Authentication required");
