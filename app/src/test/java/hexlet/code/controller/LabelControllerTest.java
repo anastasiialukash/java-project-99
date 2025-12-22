@@ -5,9 +5,11 @@ import hexlet.code.dto.LabelCreateDTO;
 import hexlet.code.dto.LoginRequestDTO;
 import hexlet.code.model.Label;
 import hexlet.code.model.Task;
+import hexlet.code.model.TaskStatus;
 import hexlet.code.model.User;
 import hexlet.code.repository.LabelRepository;
 import hexlet.code.repository.TaskRepository;
+import hexlet.code.repository.TaskStatusRepository;
 import hexlet.code.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,6 +49,9 @@ public class LabelControllerTest {
 
     @Autowired
     private TaskRepository taskRepository;
+    
+    @Autowired
+    private TaskStatusRepository taskStatusRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -114,7 +119,10 @@ public class LabelControllerTest {
 
     @Test
     void testGetLabelById() throws Exception {
-        mockMvc.perform(get("/api/labels/{id}", testLabel.getId()))
+        String token = getToken(testUser.getEmail(), TEST_PASSWORD);
+        
+        mockMvc.perform(get("/api/labels/{id}", testLabel.getId())
+                .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(testLabel.getId()))
@@ -190,8 +198,15 @@ public class LabelControllerTest {
     void testDeleteLabelWithTasks() throws Exception {
         String token = getToken(testUser.getEmail(), TEST_PASSWORD);
 
+        TaskStatus taskStatus = new TaskStatus();
+        taskStatus.setName("Test Status");
+        taskStatus.setSlug("test_status");
+        taskStatus.setCreatedAt(Instant.now());
+        taskStatusRepository.save(taskStatus);
+        
         Task task = new Task();
         task.setName("Test Task");
+        task.setTaskStatus(taskStatus);
         task.setCreatedAt(Instant.now());
         Set<Label> labels = new HashSet<>();
         labels.add(testLabel);
