@@ -43,6 +43,13 @@ public class TaskService {
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
+    
+    public List<TaskDTO> getFilteredTasks(String titleCont, Long assigneeId, String status, Long labelId) {
+        List<Task> filteredTasks = taskRepository.findByFilters(titleCont, assigneeId, status, labelId);
+        return filteredTasks.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
 
     public TaskDTO getTaskById(Long id) {
         Task task = taskRepository.findById(id)

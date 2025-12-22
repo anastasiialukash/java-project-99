@@ -4,9 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import hexlet.code.dto.LoginRequestDTO;
 import hexlet.code.dto.TaskCreateDTO;
 import hexlet.code.dto.TaskUpdateDTO;
+import hexlet.code.model.Label;
 import hexlet.code.model.Task;
 import hexlet.code.model.TaskStatus;
 import hexlet.code.model.User;
+import hexlet.code.repository.LabelRepository;
 import hexlet.code.repository.TaskRepository;
 import hexlet.code.repository.TaskStatusRepository;
 import hexlet.code.repository.UserRepository;
@@ -49,6 +51,9 @@ public class TaskControllerTest {
 
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private LabelRepository labelRepository;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -59,6 +64,7 @@ public class TaskControllerTest {
     private User testUser;
     private TaskStatus testTaskStatus;
     private Task testTask;
+    private Label testLabel;
     private final String TEST_PASSWORD = "password";
 
     @BeforeEach
@@ -78,18 +84,25 @@ public class TaskControllerTest {
         testTaskStatus.setCreatedAt(Instant.now());
         taskStatusRepository.save(testTaskStatus);
 
+        testLabel = new Label();
+        testLabel.setName("Test Label");
+        testLabel.setCreatedAt(Instant.now());
+        labelRepository.save(testLabel);
+        
         testTask = new Task();
         testTask.setName("Test Task");
         testTask.setDescription("Test Description");
         testTask.setTaskStatus(testTaskStatus);
         testTask.setAssignee(testUser);
         testTask.setCreatedAt(Instant.now());
+        testTask.getLabels().add(testLabel);
         taskRepository.save(testTask);
     }
 
     @AfterEach
     void tearDown() {
         taskRepository.deleteAll();
+        labelRepository.deleteAll();
         taskStatusRepository.deleteAll();
         userRepository.deleteAll();
     }
@@ -201,6 +214,242 @@ public class TaskControllerTest {
         assertThat(taskRepository.existsById(testTask.getId())).isFalse();
     }
 
+    @Test
+    void testFilterTasksByTitleCont() throws Exception {
+        String token = getToken(testUser.getEmail(), TEST_PASSWORD);
+
+        Task secondTask = new Task();
+        secondTask.setName("Another Task");
+        secondTask.setDescription("Another Description");
+        secondTask.setTaskStatus(testTaskStatus);
+        secondTask.setAssignee(testUser);
+        secondTask.setCreatedAt(Instant.now());
+        taskRepository.save(secondTask);
+
+        mockMvc.perform(get("/api/tasks")
+                .param("titleCont", "Test")
+                .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(testTask.getId()))
+                .andExpect(jsonPath("$[0].title").value(testTask.getName()));
+                
+        // Filter by title containing "Another"
+        mockMvc.perform(get("/api/tasks")
+                .param("titleCont", "Another")
+                .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(secondTask.getId()))
+                .andExpect(jsonPath("$[0].title").value(secondTask.getName()));
+                
+        // Filter by title containing "Task" (should return both)
+        mockMvc.perform(get("/api/tasks")
+                .param("titleCont", "Task")
+                .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(2));
+    }
+    
+    @Test
+    void testFilterTasksByAssigneeId() throws Exception {
+        String token = getToken(testUser.getEmail(), TEST_PASSWORD);
+        
+        // Create a second user
+        User secondUser = new User();
+        secondUser.setEmail("second@example.com");
+        secondUser.setFirstName("Second");
+        secondUser.setLastName("User");
+        secondUser.setPassword(passwordEncoder.encode(TEST_PASSWORD));
+        secondUser.setCreatedAt(Instant.now());
+        secondUser.setUpdatedAt(Instant.now());
+        userRepository.save(secondUser);
+        
+        // Create a second task with a different assignee
+        Task secondTask = new Task();
+        secondTask.setName("Second Task");
+        secondTask.setDescription("Second Description");
+        secondTask.setTaskStatus(testTaskStatus);
+        secondTask.setAssignee(secondUser);
+        secondTask.setCreatedAt(Instant.now());
+        taskRepository.save(secondTask);
+        
+        // Filter by first user's ID
+        mockMvc.perform(get("/api/tasks")
+                .param("assigneeId", testUser.getId().toString())
+                .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(testTask.getId()))
+                .andExpect(jsonPath("$[0].assignee_id").value(testUser.getId()));
+                
+        // Filter by second user's ID
+        mockMvc.perform(get("/api/tasks")
+                .param("assigneeId", secondUser.getId().toString())
+                .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(secondTask.getId()))
+                .andExpect(jsonPath("$[0].assignee_id").value(secondUser.getId()));
+    }
+    
+    @Test
+    void testFilterTasksByStatus() throws Exception {
+        String token = getToken(testUser.getEmail(), TEST_PASSWORD);
+        
+        // Create a second status
+        TaskStatus secondStatus = new TaskStatus();
+        secondStatus.setName("Second Status");
+        secondStatus.setSlug("second_status");
+        secondStatus.setCreatedAt(Instant.now());
+        taskStatusRepository.save(secondStatus);
+        
+        // Create a second task with a different status
+        Task secondTask = new Task();
+        secondTask.setName("Second Task");
+        secondTask.setDescription("Second Description");
+        secondTask.setTaskStatus(secondStatus);
+        secondTask.setAssignee(testUser);
+        secondTask.setCreatedAt(Instant.now());
+        taskRepository.save(secondTask);
+        
+        // Filter by first status
+        mockMvc.perform(get("/api/tasks")
+                .param("status", testTaskStatus.getSlug())
+                .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(testTask.getId()))
+                .andExpect(jsonPath("$[0].status").value(testTaskStatus.getSlug()));
+                
+        // Filter by second status
+        mockMvc.perform(get("/api/tasks")
+                .param("status", secondStatus.getSlug())
+                .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(secondTask.getId()))
+                .andExpect(jsonPath("$[0].status").value(secondStatus.getSlug()));
+    }
+    
+    @Test
+    void testFilterTasksByLabelId() throws Exception {
+        String token = getToken(testUser.getEmail(), TEST_PASSWORD);
+        
+        // Create a second label
+        Label secondLabel = new Label();
+        secondLabel.setName("Second Label");
+        secondLabel.setCreatedAt(Instant.now());
+        labelRepository.save(secondLabel);
+        
+        // Create a second task with a different label
+        Task secondTask = new Task();
+        secondTask.setName("Second Task");
+        secondTask.setDescription("Second Description");
+        secondTask.setTaskStatus(testTaskStatus);
+        secondTask.setAssignee(testUser);
+        secondTask.setCreatedAt(Instant.now());
+        secondTask.getLabels().add(secondLabel);
+        taskRepository.save(secondTask);
+        
+        // Filter by first label
+        mockMvc.perform(get("/api/tasks")
+                .param("labelId", testLabel.getId().toString())
+                .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(testTask.getId()));
+                
+        // Filter by second label
+        mockMvc.perform(get("/api/tasks")
+                .param("labelId", secondLabel.getId().toString())
+                .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(secondTask.getId()));
+    }
+    
+    @Test
+    void testCombinedFilters() throws Exception {
+        String token = getToken(testUser.getEmail(), TEST_PASSWORD);
+        
+        // Create a second status
+        TaskStatus secondStatus = new TaskStatus();
+        secondStatus.setName("Second Status");
+        secondStatus.setSlug("second_status");
+        secondStatus.setCreatedAt(Instant.now());
+        taskStatusRepository.save(secondStatus);
+        
+        // Create a second label
+        Label secondLabel = new Label();
+        secondLabel.setName("Second Label");
+        secondLabel.setCreatedAt(Instant.now());
+        labelRepository.save(secondLabel);
+        
+        // Create a second task with different properties
+        Task secondTask = new Task();
+        secondTask.setName("Second Task");
+        secondTask.setDescription("Second Description");
+        secondTask.setTaskStatus(secondStatus);
+        secondTask.setAssignee(testUser);
+        secondTask.setCreatedAt(Instant.now());
+        secondTask.getLabels().add(secondLabel);
+        taskRepository.save(secondTask);
+        
+        // Filter by multiple criteria that match the first task
+        mockMvc.perform(get("/api/tasks")
+                .param("titleCont", "Test")
+                .param("assigneeId", testUser.getId().toString())
+                .param("status", testTaskStatus.getSlug())
+                .param("labelId", testLabel.getId().toString())
+                .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(testTask.getId()));
+                
+        // Filter by multiple criteria that match the second task
+        mockMvc.perform(get("/api/tasks")
+                .param("titleCont", "Second")
+                .param("assigneeId", testUser.getId().toString())
+                .param("status", secondStatus.getSlug())
+                .param("labelId", secondLabel.getId().toString())
+                .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(secondTask.getId()));
+                
+        // Filter by criteria that don't match any task
+        mockMvc.perform(get("/api/tasks")
+                .param("titleCont", "Nonexistent")
+                .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+    
     @Test
     void testAccessTasksWithoutAuthentication() throws Exception {
         mockMvc.perform(get("/api/tasks"))
