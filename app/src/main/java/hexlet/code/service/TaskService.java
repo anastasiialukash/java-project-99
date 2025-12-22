@@ -1,12 +1,15 @@
 package hexlet.code.service;
 
+import hexlet.code.dto.LabelDTO;
 import hexlet.code.dto.TaskCreateDTO;
 import hexlet.code.dto.TaskDTO;
 import hexlet.code.dto.TaskUpdateDTO;
 import hexlet.code.exception.ResourceNotFoundException;
+import hexlet.code.model.Label;
 import hexlet.code.model.Task;
 import hexlet.code.model.TaskStatus;
 import hexlet.code.model.User;
+import hexlet.code.repository.LabelRepository;
 import hexlet.code.repository.TaskRepository;
 import hexlet.code.repository.TaskStatusRepository;
 import hexlet.code.repository.UserRepository;
@@ -17,6 +20,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,6 +34,9 @@ public class TaskService {
 
     @Autowired
     private TaskStatusRepository taskStatusRepository;
+    
+    @Autowired
+    private LabelRepository labelRepository;
 
     public List<TaskDTO> getAllTasks() {
         return taskRepository.findAll().stream()
@@ -57,6 +64,14 @@ public class TaskService {
             User assignee = userRepository.findById(taskCreateDTO.getAssignee_id())
                     .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + taskCreateDTO.getAssignee_id()));
             task.setAssignee(assignee);
+        }
+
+        if (taskCreateDTO.getLabelIds() != null && !taskCreateDTO.getLabelIds().isEmpty()) {
+            Set<Label> labels = taskCreateDTO.getLabelIds().stream()
+                    .map(labelId -> labelRepository.findById(labelId)
+                            .orElseThrow(() -> new ResourceNotFoundException("Label not found with id: " + labelId)))
+                    .collect(Collectors.toSet());
+            task.setLabels(labels);
         }
         
         task.setCreatedAt(Instant.now());
@@ -92,6 +107,14 @@ public class TaskService {
                     .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + taskUpdateDTO.getAssignee_id()));
             task.setAssignee(assignee);
         }
+
+        if (taskUpdateDTO.getLabelIds() != null) {
+            Set<Label> labels = taskUpdateDTO.getLabelIds().stream()
+                    .map(labelId -> labelRepository.findById(labelId)
+                            .orElseThrow(() -> new ResourceNotFoundException("Label not found with id: " + labelId)))
+                    .collect(Collectors.toSet());
+            task.setLabels(labels);
+        }
         
         Task updatedTask = taskRepository.save(task);
         return convertToDTO(updatedTask);
@@ -118,6 +141,25 @@ public class TaskService {
         
         if (task.getCreatedAt() != null) {
             dto.setCreatedAt(LocalDate.ofInstant(task.getCreatedAt(), ZoneId.systemDefault()));
+        }
+
+        if (task.getLabels() != null && !task.getLabels().isEmpty()) {
+            Set<LabelDTO> labelDTOs = task.getLabels().stream()
+                    .map(this::convertToLabelDTO)
+                    .collect(Collectors.toSet());
+            dto.setLabels(labelDTOs);
+        }
+        
+        return dto;
+    }
+    
+    private LabelDTO convertToLabelDTO(Label label) {
+        LabelDTO dto = new LabelDTO();
+        dto.setId(label.getId());
+        dto.setName(label.getName());
+        
+        if (label.getCreatedAt() != null) {
+            dto.setCreatedAt(label.getCreatedAt());
         }
         
         return dto;

@@ -35,6 +35,7 @@ dependencies {
     implementation("io.jsonwebtoken:jjwt-jackson:0.11.5")
     implementation("org.mapstruct:mapstruct:1.6.3")
     implementation("org.openapitools:jackson-databind-nullable:0.2.8")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.4.0")
     annotationProcessor("org.mapstruct:mapstruct-processor:1.6.3")
     annotationProcessor("org.projectlombok:lombok")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
