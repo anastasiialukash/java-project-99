@@ -104,27 +104,25 @@ public class UserService {
     public void checkUserAuthorization(String userEmail) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication == null || !authentication.isAuthenticated()) {
+        if (authentication == null || !authentication.isAuthenticated()
+                || "anonymousUser".equals(authentication.getPrincipal())) {
             return;
         }
 
         Object principal = authentication.getPrincipal();
-
-        if (principal instanceof String && principal.equals("anonymousUser")) {
-            return;
-        }
-
         String currentUserEmail;
-        if (principal instanceof UserDetails) {
-            currentUserEmail = ((UserDetails) principal).getUsername();
+
+        if (principal instanceof UserDetails userDetails) {
+            currentUserEmail = userDetails.getUsername();
         } else {
             currentUserEmail = principal.toString();
         }
 
         if (!currentUserEmail.equals(userEmail)) {
-            throw new ForbiddenException("You are not authorized to perform this operation");
+            throw new ForbiddenException("You are not allowed to modify another user");
         }
     }
+
 
 
     private UserDTO convertToDTO(User user) {
