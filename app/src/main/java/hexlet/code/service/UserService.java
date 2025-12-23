@@ -101,27 +101,26 @@ public class UserService {
      * 
      * @param userEmail The email of the user being operated on
      */
-    public void checkUserAuthorization(String userEmail) {
+     public void checkUserAuthorization(String userEmail) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication == null || !authentication.isAuthenticated()
-                || "anonymousUser".equals(authentication.getPrincipal())) {
+        if (authentication == null || !authentication.isAuthenticated()) {
             return;
         }
 
         Object principal = authentication.getPrincipal();
-        String currentUserEmail;
 
-        if (principal instanceof UserDetails userDetails) {
-            currentUserEmail = userDetails.getUsername();
-        } else {
-            currentUserEmail = principal.toString();
+        if (!(principal instanceof UserDetails userDetails)) {
+            return;
         }
+
+        String currentUserEmail = userDetails.getUsername();
 
         if (!currentUserEmail.equals(userEmail)) {
-            throw new ForbiddenException("You are not allowed to modify another user");
+            throw new ForbiddenException("You are not authorized to perform this operation on this user");
         }
     }
+
 
 
 
