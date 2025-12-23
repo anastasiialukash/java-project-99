@@ -151,10 +151,12 @@ public class TaskService {
         }
 
         if (task.getLabels() != null && !task.getLabels().isEmpty()) {
-            Set<LabelDTO> labelDTOs = task.getLabels().stream()
-                    .map(this::convertToLabelDTO)
-                    .collect(Collectors.toSet());
-            dto.setLabels(labelDTOs);
+            dto.setTaskLabelIds(
+                    task.getLabels()
+                            .stream()
+                            .map(Label::getId)
+                            .toList()
+            );
         }
         
         return dto;
