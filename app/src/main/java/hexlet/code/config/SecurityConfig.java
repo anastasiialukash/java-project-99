@@ -10,6 +10,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -31,56 +32,65 @@ public class SecurityConfig {
     @Autowired
     private UserDetailsService userDetailsService;
 
-    @Bean("defaultSecurityFilterChain")
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/api/login").permitAll()
-                .requestMatchers("/").permitAll()
-                .requestMatchers("/assets/**").permitAll()
-                .requestMatchers("/h2-console/**").permitAll()
-                .requestMatchers("/swagger-ui/**").permitAll()
-                .requestMatchers("/v3/api-docs/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/task_statuses", "/api/task_statuses/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/tasks", "/api/tasks/**").authenticated()
-                .requestMatchers(HttpMethod.POST, "/api/tasks").authenticated()
-                .requestMatchers(HttpMethod.PUT, "/api/tasks/**").authenticated()
-                .requestMatchers(HttpMethod.DELETE, "/api/tasks/**").authenticated()
-                .requestMatchers("/api/**").authenticated()
-                .anyRequest().permitAll()
-            )
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authenticationProvider(authenticationProvider())
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-            .exceptionHandling(exceptions -> exceptions
-                .authenticationEntryPoint((request, response, authException) -> {
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.getWriter().write("Unauthorized: Authentication required");
-                })
-            );
+                .csrf(csrf -> csrf.disable())
 
-        http.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()));
-        
+                .httpBasic(Customizer.withDefaults())
+
+                .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers("/", "/api/login").permitAll()
+                        .requestMatchers("/assets/**").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/h2-console/**").permitAll()
+
+                        .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
+
+                        .requestMatchers(HttpMethod.GET, "/api/task_statuses/**").permitAll()
+
+                        .requestMatchers("/api/**").authenticated()
+
+                        .anyRequest().permitAll()
+                )
+
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+
+                .authenticationProvider(authenticationProvider())
+
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                        })
+                );
+
+        http.headers(headers ->
+                headers.frameOptions(frameOptions -> frameOptions.disable())
+        );
+
         return http.build();
     }
-    
-    @Bean("defaultAuthenticationProvider")
+
+    @Bean
     public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder());
-        return authProvider;
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(userDetailsService);
+        provider.setPasswordEncoder(passwordEncoder());
+        return provider;
     }
-    
-    @Bean("defaultPasswordEncoder")
+
+    @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-    
-    @Bean("defaultAuthenticationManager")
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+
+    @Bean
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 }
