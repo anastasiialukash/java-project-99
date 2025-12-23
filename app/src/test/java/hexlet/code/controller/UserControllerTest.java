@@ -88,7 +88,7 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$[0].email").value(testUser.getEmail()))
                 .andExpect(jsonPath("$[0].firstName").value(testUser.getFirstName()))
                 .andExpect(jsonPath("$[0].lastName").value(testUser.getLastName()))
-                .andExpect(jsonPath("$[0].password").doesNotExist()); // Password should not be returned
+                .andExpect(jsonPath("$[0].password").doesNotExist());
     }
 
     @Test
