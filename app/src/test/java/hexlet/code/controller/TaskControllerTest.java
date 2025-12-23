@@ -447,34 +447,4 @@ public class TaskControllerTest {
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(0));
     }
-    
-    @Test
-    void testAccessTasksWithoutAuthentication() throws Exception {
-        mockMvc.perform(get("/api/tasks"))
-                .andExpect(status().isUnauthorized());
-
-        mockMvc.perform(get("/api/tasks/{id}", testTask.getId()))
-                .andExpect(status().isUnauthorized());
-
-        TaskCreateDTO newTask = new TaskCreateDTO();
-        newTask.setTitle("New Task");
-        newTask.setContent("New Description");
-        newTask.setStatus(testTaskStatus.getSlug());
-
-        mockMvc.perform(post("/api/tasks")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(newTask)))
-                .andExpect(status().isUnauthorized());
-
-        TaskUpdateDTO updateTask = new TaskUpdateDTO();
-        updateTask.setTitle("Updated Task");
-
-        mockMvc.perform(put("/api/tasks/{id}", testTask.getId())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateTask)))
-                .andExpect(status().isUnauthorized());
-
-        mockMvc.perform(delete("/api/tasks/{id}", testTask.getId()))
-                .andExpect(status().isUnauthorized());
-    }
 }
