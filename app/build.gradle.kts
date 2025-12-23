@@ -75,3 +75,12 @@ sentry {
     authToken = System.getenv("SENTRY_AUTH_TOKEN") ?: ""
 }
 
+// Disable Sentry tasks if auth token is not available
+if (System.getenv("SENTRY_AUTH_TOKEN") == null) {
+    tasks.configureEach {
+        if (name.startsWith("sentry")) {
+            enabled = false
+        }
+    }
+}
+

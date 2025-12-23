@@ -48,3 +48,14 @@ A separate test profile is configured for running tests with:
 - Appropriate test logging levels
 
 Tests automatically use this profile via the `@ActiveProfiles("test")` annotation.
+
+## Error Tracking with Sentry
+
+This application is integrated with Sentry for error tracking and performance monitoring. 
+
+Key features:
+- Automatic exception tracking
+- Source context for better debugging
+- Release tracking
+
+For setup instructions and configuration details, see [SENTRY_SETUP.md](SENTRY_SETUP.md).
