@@ -82,8 +82,13 @@ public class UserControllerTest {
 
     @Test
     void testGetAllUsers() throws Exception {
-        mockMvc.perform(get("/api/users")).andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON)).andExpect(jsonPath("$").isArray())
+        String token = getToken(testUser.getEmail(), TEST_PASSWORD);
+        
+        mockMvc.perform(get("/api/users")
+                .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$[0].id").value(testUser.getId()))
                 .andExpect(jsonPath("$[0].email").value(testUser.getEmail()))
                 .andExpect(jsonPath("$[0].firstName").value(testUser.getFirstName()))
@@ -93,7 +98,11 @@ public class UserControllerTest {
 
     @Test
     void testGetUserById() throws Exception {
-        mockMvc.perform(get("/api/users/{id}", testUser.getId())).andExpect(status().isOk())
+        String token = getToken(testUser.getEmail(), TEST_PASSWORD);
+        
+        mockMvc.perform(get("/api/users/{id}", testUser.getId())
+                .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(testUser.getId()))
                 .andExpect(jsonPath("$.email").value(testUser.getEmail()))
@@ -191,7 +200,11 @@ public class UserControllerTest {
 
     @Test
     void testGetNonExistentUser() throws Exception {
-        mockMvc.perform(get("/api/users/999")).andExpect(status().isNotFound());
+        String token = getToken(testUser.getEmail(), TEST_PASSWORD);
+        
+        mockMvc.perform(get("/api/users/999")
+                .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNotFound());
     }
 
     @Test
