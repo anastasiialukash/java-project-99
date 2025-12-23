@@ -8,6 +8,7 @@ plugins {
     id("io.freefair.lombok") version "8.13.1"
     jacoco
     id("com.diffplug.spotless") version "6.25.0"
+    id("io.sentry.jvm.gradle") version "5.12.2"
 }
 
 group = "hexlet.code"
@@ -63,5 +64,14 @@ tasks.jacocoTestReport {
     reports {
         xml.required.set(true)
     }
+}
+
+
+sentry {
+    includeSourceContext = true
+
+    org = "anastasiialukash"
+    projectName = "java"
+    authToken = System.getenv("SENTRY_AUTH_TOKEN") ?: ""
 }
 
