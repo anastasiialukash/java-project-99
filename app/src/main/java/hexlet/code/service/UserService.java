@@ -103,24 +103,29 @@ public class UserService {
      */
     public void checkUserAuthorization(String userEmail) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         if (authentication == null || !authentication.isAuthenticated()) {
-            throw new ForbiddenException("Authentication required");
+            return;
+        }
+
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof String && principal.equals("anonymousUser")) {
+            return;
         }
 
         String currentUserEmail;
-        Object principal = authentication.getPrincipal();
         if (principal instanceof UserDetails) {
             currentUserEmail = ((UserDetails) principal).getUsername();
-        } else if (principal instanceof String) {
-            currentUserEmail = (String) principal;
         } else {
-            throw new ForbiddenException("Unknown authentication principal type");
+            currentUserEmail = principal.toString();
         }
 
         if (!currentUserEmail.equals(userEmail)) {
-            throw new ForbiddenException("You are not authorized to perform this operation on another user's account");
+            throw new ForbiddenException("You are not authorized to perform this operation");
         }
     }
+
 
     private UserDTO convertToDTO(User user) {
         UserDTO dto = new UserDTO();
