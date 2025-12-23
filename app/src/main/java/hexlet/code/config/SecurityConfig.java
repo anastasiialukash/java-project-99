@@ -36,36 +36,27 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-
                 .httpBasic(Customizer.withDefaults())
-
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/", "/api/login").permitAll()
                         .requestMatchers("/assets/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
-
                         .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
-
                         .requestMatchers(HttpMethod.GET, "/api/task_statuses/**").permitAll()
-
+                        .requestMatchers("/api/users/**").permitAll()
                         .requestMatchers("/api/**").authenticated()
-
                         .anyRequest().permitAll()
                 )
-
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-
                 .authenticationProvider(authenticationProvider())
-
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-
                 .exceptionHandling(exceptions -> exceptions
-                        .authenticationEntryPoint((request, response, authException) -> {
-                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                        })
+                        .authenticationEntryPoint((request, response, authException) ->
+                                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED)
+                        )
                 );
 
         http.headers(headers ->
