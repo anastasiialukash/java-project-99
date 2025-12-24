@@ -7,6 +7,7 @@ import hexlet.code.service.LabelService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,10 +30,13 @@ public class LabelController {
     private LabelService labelService;
 
     @GetMapping
-    public List<LabelDTO> getAllLabels() {
-        return labelService.getAllLabels().stream()
+    public ResponseEntity<List<LabelDTO>> getAllLabels() {
+        List<LabelDTO> labels = labelService.getAllLabels().stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+        return ResponseEntity.ok()
+                .header("X-Total-Count", String.valueOf(labels.size()))
+                .body(labels);
     }
 
     @GetMapping("/{id}")
