@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.Set;
+import java.util.List;
 
 @Getter
 @Setter
@@ -23,6 +23,6 @@ public class TaskCreateDTO {
     private String status;
     
     private Long assignee_id;
-    
-    private Set<Long> labelIds;
+
+    private List<Long> taskLabelIds;
 }

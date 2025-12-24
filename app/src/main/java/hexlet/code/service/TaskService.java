@@ -73,8 +73,8 @@ public class TaskService {
             task.setAssignee(assignee);
         }
 
-        if (taskCreateDTO.getLabelIds() != null && !taskCreateDTO.getLabelIds().isEmpty()) {
-            Set<Label> labels = taskCreateDTO.getLabelIds().stream()
+        if (taskCreateDTO.getTaskLabelIds() != null && !taskCreateDTO.getTaskLabelIds().isEmpty()) {
+            Set<Label> labels = taskCreateDTO.getTaskLabelIds().stream()
                     .map(labelId -> labelRepository.findById(labelId)
                             .orElseThrow(() -> new ResourceNotFoundException("Label not found with id: " + labelId)))
                     .collect(Collectors.toSet());
