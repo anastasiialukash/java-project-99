@@ -56,5 +56,3 @@ Key features:
 - Automatic exception tracking
 - Source context for better debugging
 - Release tracking
-
-For setup instructions and configuration details, see [SENTRY_SETUP.md](SENTRY_SETUP.md).
