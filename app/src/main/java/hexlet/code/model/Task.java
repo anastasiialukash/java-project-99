@@ -34,6 +34,7 @@ public class Task {
 
     private Integer index;
 
+    @jakarta.persistence.Column(length = 1000)
     private String description;
 
     @NotNull
