@@ -4,6 +4,7 @@ import hexlet.code.dto.LabelDTO;
 import hexlet.code.dto.TaskCreateDTO;
 import hexlet.code.dto.TaskDTO;
 import hexlet.code.dto.TaskUpdateDTO;
+import hexlet.code.exception.ForbiddenException;
 import hexlet.code.exception.ResourceNotFoundException;
 import hexlet.code.model.Label;
 import hexlet.code.model.Task;
@@ -37,13 +38,16 @@ public class TaskService {
     
     @Autowired
     private LabelRepository labelRepository;
+    
+    @Autowired
+    private UserService userService;
 
     public List<TaskDTO> getAllTasks() {
         return taskRepository.findAll().stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
-    
+
     public List<TaskDTO> getFilteredTasks(String titleCont, Long assigneeId, String status, Long labelId) {
         List<Task> filteredTasks = taskRepository.findByFilters(titleCont, assigneeId, status, labelId);
         return filteredTasks.stream()
@@ -57,7 +61,9 @@ public class TaskService {
         return convertToDTO(task);
     }
 
-    public TaskDTO createTask(TaskCreateDTO taskCreateDTO) {
+    public TaskDTO createTask(TaskCreateDTO taskCreateDTO, String username) {
+        userService.checkUserAuthorization(username);
+        
         Task task = new Task();
         task.setName(taskCreateDTO.getTitle());
         task.setDescription(taskCreateDTO.getContent());
@@ -87,9 +93,13 @@ public class TaskService {
         return convertToDTO(savedTask);
     }
 
-    public TaskDTO updateTask(Long id, TaskUpdateDTO taskUpdateDTO) {
+    public TaskDTO updateTask(Long id, TaskUpdateDTO taskUpdateDTO, String username) {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
+
+        if (task.getAssignee() != null && !task.getAssignee().getEmail().equals(username)) {
+            throw new ForbiddenException("You are not authorized to update this task");
+        }
         
         if (taskUpdateDTO.getTitle() != null) {
             task.setName(taskUpdateDTO.getTitle());
@@ -127,10 +137,14 @@ public class TaskService {
         return convertToDTO(updatedTask);
     }
 
-    public void deleteTask(Long id) {
-        if (!taskRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Task not found with id: " + id);
+    public void deleteTask(Long id, String username) {
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
+
+        if (task.getAssignee() != null && !task.getAssignee().getEmail().equals(username)) {
+            throw new ForbiddenException("You are not authorized to delete this task");
         }
+        
         taskRepository.deleteById(id);
     }
 

@@ -5,6 +5,7 @@ import hexlet.code.dto.LoginRequestDTO;
 import hexlet.code.dto.UserCreateDTO;
 import hexlet.code.dto.UserUpdateDTO;
 import hexlet.code.model.User;
+import hexlet.code.repository.TaskRepository;
 import hexlet.code.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +38,9 @@ public class UserControllerTest {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private TaskRepository taskRepository;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -75,6 +79,7 @@ public class UserControllerTest {
 
     @AfterEach
     void tearDown() {
+        taskRepository.deleteAll();
         userRepository.deleteAll();
     }
 
@@ -225,5 +230,59 @@ public class UserControllerTest {
         mockMvc.perform(delete("/api/users/999")
                 .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNotFound());
+    }
+    
+    @Test
+    void testUpdateAnotherUserReturns403() throws Exception {
+        // Create another user
+        User anotherUser = new User();
+        anotherUser.setEmail("another@example.com");
+        anotherUser.setFirstName("Another");
+        anotherUser.setLastName("User");
+        anotherUser.setPassword(passwordEncoder.encode("anotherpassword"));
+        anotherUser.setCreatedAt(Instant.now());
+        anotherUser.setUpdatedAt(Instant.now());
+        userRepository.save(anotherUser);
+        
+        // Get token for the first user
+        String token = getToken(testUser.getEmail(), TEST_PASSWORD);
+        
+        // Try to update the second user with the first user's token
+        UserUpdateDTO updateUser = new UserUpdateDTO();
+        updateUser.setFirstName("Hacked");
+        
+        mockMvc.perform(put("/api/users/{id}", anotherUser.getId())
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateUser)))
+                .andExpect(status().isForbidden());
+        
+        // Verify the user was not updated
+        User unchangedUser = userRepository.findById(anotherUser.getId()).orElseThrow();
+        assertThat(unchangedUser.getFirstName()).isEqualTo(anotherUser.getFirstName());
+    }
+    
+    @Test
+    void testDeleteAnotherUserReturns403() throws Exception {
+        // Create another user
+        User anotherUser = new User();
+        anotherUser.setEmail("another@example.com");
+        anotherUser.setFirstName("Another");
+        anotherUser.setLastName("User");
+        anotherUser.setPassword(passwordEncoder.encode("anotherpassword"));
+        anotherUser.setCreatedAt(Instant.now());
+        anotherUser.setUpdatedAt(Instant.now());
+        userRepository.save(anotherUser);
+        
+        // Get token for the first user
+        String token = getToken(testUser.getEmail(), TEST_PASSWORD);
+        
+        // Try to delete the second user with the first user's token
+        mockMvc.perform(delete("/api/users/{id}", anotherUser.getId())
+                .header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden());
+        
+        // Verify the user was not deleted
+        assertThat(userRepository.existsById(anotherUser.getId())).isTrue();
     }
 }

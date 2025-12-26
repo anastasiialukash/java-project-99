@@ -113,7 +113,7 @@ public class DataInitializer implements ApplicationRunner {
             taskCreateDTO.setContent(String.join("\n", faker.lorem().paragraphs(5)));
             taskCreateDTO.setStatus(taskStatus.getSlug());
             taskCreateDTO.setAssignee_id(user.getId());
-            taskService.createTask(taskCreateDTO);
+            taskService.createTask(taskCreateDTO, user.getEmail());
         });
     }
 }

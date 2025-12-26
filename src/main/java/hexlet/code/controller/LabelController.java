@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,8 +31,9 @@ public class LabelController {
     private LabelService labelService;
 
     @GetMapping
-    public ResponseEntity<List<LabelDTO>> getAllLabels() {
-        List<LabelDTO> labels = labelService.getAllLabels().stream()
+    public ResponseEntity<List<LabelDTO>> getAllLabels(Authentication authentication) {
+        String username = authentication.getName();
+        List<LabelDTO> labels = labelService.getAllLabels(username).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
         return ResponseEntity.ok()
@@ -40,28 +42,32 @@ public class LabelController {
     }
 
     @GetMapping("/{id}")
-    public LabelDTO getLabelById(@PathVariable Long id) {
-        Label label = labelService.getLabelById(id);
+    public LabelDTO getLabelById(@PathVariable Long id, Authentication authentication) {
+        String username = authentication.getName();
+        Label label = labelService.getLabelById(id, username);
         return convertToDTO(label);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public LabelDTO createLabel(@Valid @RequestBody LabelCreateDTO labelCreateDTO) {
-        Label label = labelService.createLabel(labelCreateDTO.getName());
+    public LabelDTO createLabel(@Valid @RequestBody LabelCreateDTO labelCreateDTO, Authentication authentication) {
+        String username = authentication.getName();
+        Label label = labelService.createLabel(labelCreateDTO.getName(), username);
         return convertToDTO(label);
     }
 
     @PutMapping("/{id}")
-    public LabelDTO updateLabel(@PathVariable Long id, @Valid @RequestBody LabelCreateDTO labelCreateDTO) {
-        Label label = labelService.updateLabel(id, labelCreateDTO.getName());
+    public LabelDTO updateLabel(@PathVariable Long id, @Valid @RequestBody LabelCreateDTO labelCreateDTO, Authentication authentication) {
+        String username = authentication.getName();
+        Label label = labelService.updateLabel(id, labelCreateDTO.getName(), username);
         return convertToDTO(label);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteLabel(@PathVariable Long id) {
-        labelService.deleteLabel(id);
+    public void deleteLabel(@PathVariable Long id, Authentication authentication) {
+        String username = authentication.getName();
+        labelService.deleteLabel(id, username);
     }
 
     private LabelDTO convertToDTO(Label label) {

@@ -31,7 +31,7 @@ public class TestSecurityConfig {
     @Autowired
     private UserDetailsService userDetailsService;
 
-    @Bean("testSecurityFilterChain")
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
@@ -59,7 +59,7 @@ public class TestSecurityConfig {
         return http.build();
     }
     
-    @Bean("testAuthenticationProvider")
+    @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService);
@@ -67,12 +67,12 @@ public class TestSecurityConfig {
         return authProvider;
     }
     
-    @Bean("testPasswordEncoder")
+    @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
     
-    @Bean("testAuthenticationManager")
+    @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }

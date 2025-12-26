@@ -43,7 +43,9 @@ public class TaskStatusService {
         return convertToDTO(status);
     }
 
-    public TaskStatusDTO createStatus(TaskStatusCreateDTO taskStatusCreateDTO) {
+    public TaskStatusDTO createStatus(TaskStatusCreateDTO taskStatusCreateDTO, String username) {
+        userService.checkUserAuthorization(username);
+        
         TaskStatus taskStatus = new TaskStatus();
         taskStatus.setName(taskStatusCreateDTO.getName());
         taskStatus.setSlug(taskStatusCreateDTO.getSlug());

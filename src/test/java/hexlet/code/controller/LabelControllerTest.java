@@ -19,6 +19,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
@@ -37,6 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
 public class LabelControllerTest {
 
     @Autowired
@@ -216,5 +218,81 @@ public class LabelControllerTest {
                 .andExpect(status().isBadRequest());
 
         assertThat(labelRepository.findById(testLabel.getId())).isPresent();
+    }
+    
+    @Test
+    void testUpdateAnotherUsersLabelReturns403() throws Exception {
+        User anotherUser = new User();
+        anotherUser.setEmail("another@example.com");
+        anotherUser.setFirstName("Another");
+        anotherUser.setLastName("User");
+        anotherUser.setPassword(passwordEncoder.encode("anotherpassword"));
+        anotherUser.setCreatedAt(Instant.now());
+        userRepository.save(anotherUser);
+
+        String anotherToken = getToken(anotherUser.getEmail(), "anotherpassword");
+        
+        LabelCreateDTO newLabel = new LabelCreateDTO();
+        newLabel.setName("Another User's Label");
+        
+        String response = mockMvc.perform(post("/api/labels")
+                .header("Authorization", "Bearer " + anotherToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(newLabel)))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        Long labelId = objectMapper.readTree(response).get("id").asLong();
+
+        String token = getToken(testUser.getEmail(), TEST_PASSWORD);
+
+        LabelCreateDTO updateLabel = new LabelCreateDTO();
+        updateLabel.setName("Hacked Label");
+        
+        mockMvc.perform(put("/api/labels/{id}", labelId)
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateLabel)))
+                .andExpect(status().isForbidden());
+
+        Label unchangedLabel = labelRepository.findById(labelId).orElseThrow();
+        assertThat(unchangedLabel.getName()).isEqualTo(newLabel.getName());
+    }
+    
+    @Test
+    void testDeleteAnotherUsersLabelReturns403() throws Exception {
+        User anotherUser = new User();
+        anotherUser.setEmail("another@example.com");
+        anotherUser.setFirstName("Another");
+        anotherUser.setLastName("User");
+        anotherUser.setPassword(passwordEncoder.encode("anotherpassword"));
+        anotherUser.setCreatedAt(Instant.now());
+        userRepository.save(anotherUser);
+
+        String anotherToken = getToken(anotherUser.getEmail(), "anotherpassword");
+        
+        LabelCreateDTO newLabel = new LabelCreateDTO();
+        newLabel.setName("Another User's Label");
+        
+        String response = mockMvc.perform(post("/api/labels")
+                .header("Authorization", "Bearer " + anotherToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(newLabel)))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        Long labelId = objectMapper.readTree(response).get("id").asLong();
+
+        String token = getToken(testUser.getEmail(), TEST_PASSWORD);
+
+        mockMvc.perform(delete("/api/labels/{id}", labelId)
+                .header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden());
+
+        assertThat(labelRepository.existsById(labelId)).isTrue();
     }
 }

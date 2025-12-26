@@ -46,8 +46,10 @@ public class TaskStatusController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public TaskStatusDTO createStatus(@Valid @RequestBody TaskStatusCreateDTO taskStatusCreateDTO) {
-        return taskStatusService.createStatus(taskStatusCreateDTO);
+    public TaskStatusDTO createStatus(@Valid @RequestBody TaskStatusCreateDTO taskStatusCreateDTO,
+                                     Authentication authentication) {
+        String username = authentication.getName();
+        return taskStatusService.createStatus(taskStatusCreateDTO, username);
     }
 
     @PutMapping("/{id}")
