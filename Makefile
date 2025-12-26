@@ -7,4 +7,4 @@ build:
 	./gradlew build
 
 test:
-	./gradlew test
+	./gradlew clean test jacocoTestReport sonarqube -Dsonar.login=$(SONAR_TOKEN)
