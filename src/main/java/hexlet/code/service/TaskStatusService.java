@@ -2,7 +2,6 @@ package hexlet.code.service;
 
 import hexlet.code.dto.TaskStatusCreateDTO;
 import hexlet.code.dto.TaskStatusDTO;
-import hexlet.code.exception.ForbiddenException;
 import hexlet.code.exception.ResourceNotFoundException;
 import hexlet.code.model.TaskStatus;
 import hexlet.code.repository.TaskRepository;
@@ -77,10 +76,6 @@ public class TaskStatusService {
                 .orElseThrow(() -> new ResourceNotFoundException("Task status not found with id: " + id));
 
         userService.checkUserAuthorization(username);
-
-        if (!taskRepository.findByTaskStatus(taskStatus).isEmpty()) {
-            throw new ForbiddenException("Cannot delete task status because it is used by one or more tasks");
-        }
 
         taskStatusRepository.deleteById(id);
     }

@@ -6,6 +6,7 @@ import hexlet.code.dto.TaskStatusCreateDTO;
 import hexlet.code.dto.TaskStatusDTO;
 import hexlet.code.model.TaskStatus;
 import hexlet.code.model.User;
+import hexlet.code.repository.TaskRepository;
 import hexlet.code.repository.TaskStatusRepository;
 import hexlet.code.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -42,6 +43,9 @@ public class TaskStatusControllerTest {
     private TaskStatusRepository taskStatusRepository;
 
     @Autowired
+    private TaskRepository taskRepository;
+
+    @Autowired
     private UserRepository userRepository;
 
     @Autowired
@@ -56,7 +60,10 @@ public class TaskStatusControllerTest {
 
     @BeforeEach
     void setUp() {
-        // Create test user
+        taskRepository.deleteAll();
+        taskStatusRepository.deleteAll();
+        userRepository.deleteAll();
+
         testUser = new User();
         testUser.setEmail("test@example.com");
         testUser.setFirstName("Test");

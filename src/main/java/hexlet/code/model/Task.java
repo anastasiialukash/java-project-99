@@ -17,6 +17,7 @@ import lombok.Setter;
 
 import java.time.Instant;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 @Getter
@@ -55,4 +56,20 @@ public class Task {
     private Set<Label> labels = new HashSet<>();
 
     private Instant createdAt;
+    
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Task task = (Task) o;
+        return Objects.equals(id, task.id) &&
+               Objects.equals(name, task.name) &&
+               Objects.equals(index, task.index) &&
+               Objects.equals(description, task.description);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name, index, description);
+    }
 }

@@ -1,5 +1,6 @@
 package hexlet.code.exception;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -30,5 +31,12 @@ public class GlobalExceptionHandler {
     @ResponseBody
     public String handleForbiddenException(ForbiddenException ex) {
         return ex.getMessage();
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    @ResponseBody
+    public String handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
+        return "Cannot delete or update because it is referenced by other entities";
     }
 }

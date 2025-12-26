@@ -53,6 +53,9 @@ public class UserControllerTest {
 
     @BeforeEach
     void setUp() {
+        taskRepository.deleteAll();
+        userRepository.deleteAll();
+
         testUser = new User();
         testUser.setEmail("test@example.com");
         testUser.setFirstName("Test");
@@ -77,26 +80,38 @@ public class UserControllerTest {
                 .getContentAsString();
     }
 
-    @AfterEach
-    void tearDown() {
-        taskRepository.deleteAll();
-        userRepository.deleteAll();
-    }
-
     @Test
     void testGetAllUsers() throws Exception {
+        User secondUser = new User();
+        secondUser.setEmail("second@example.com");
+        secondUser.setFirstName("Second");
+        secondUser.setLastName("User");
+        secondUser.setPassword(passwordEncoder.encode("secondpassword"));
+        secondUser.setCreatedAt(Instant.now());
+        secondUser.setUpdatedAt(Instant.now());
+        userRepository.save(secondUser);
+
+        List<User> usersInDb = userRepository.findAll();
+        
         String token = getToken(testUser.getEmail(), TEST_PASSWORD);
         
-        mockMvc.perform(get("/api/users")
+        String responseJson = mockMvc.perform(get("/api/users")
                 .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].id").value(testUser.getId()))
-                .andExpect(jsonPath("$[0].email").value(testUser.getEmail()))
-                .andExpect(jsonPath("$[0].firstName").value(testUser.getFirstName()))
-                .andExpect(jsonPath("$[0].lastName").value(testUser.getLastName()))
-                .andExpect(jsonPath("$[0].password").doesNotExist());
+                .andExpect(jsonPath("$.length()").value(usersInDb.size()))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        for (User user : usersInDb) {
+            assertThat(responseJson).contains("\"id\":" + user.getId());
+            assertThat(responseJson).contains("\"email\":\"" + user.getEmail() + "\"");
+            assertThat(responseJson).contains("\"firstName\":\"" + user.getFirstName() + "\"");
+            assertThat(responseJson).contains("\"lastName\":\"" + user.getLastName() + "\"");
+            assertThat(responseJson).doesNotContain("\"password\"");
+        }
     }
 
     @Test

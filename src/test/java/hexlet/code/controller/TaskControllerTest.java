@@ -67,6 +67,11 @@ public class TaskControllerTest {
 
     @BeforeEach
     void setUp() {
+        taskRepository.deleteAll();
+        labelRepository.deleteAll();
+        taskStatusRepository.deleteAll();
+        userRepository.deleteAll();
+
         testUser = new User();
         testUser.setEmail("test@example.com");
         testUser.setFirstName("Test");
@@ -95,14 +100,6 @@ public class TaskControllerTest {
         testTask.setCreatedAt(Instant.now());
         testTask.getLabels().add(testLabel);
         taskRepository.save(testTask);
-    }
-
-    @AfterEach
-    void tearDown() {
-        taskRepository.deleteAll();
-        labelRepository.deleteAll();
-        taskStatusRepository.deleteAll();
-        userRepository.deleteAll();
     }
 
     private String getToken(String username, String password) throws Exception {

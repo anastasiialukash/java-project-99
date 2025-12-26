@@ -69,6 +69,10 @@ public class LabelControllerTest {
 
     @BeforeEach
     void setUp() {
+        taskRepository.deleteAll();
+        labelRepository.deleteAll();
+        userRepository.deleteAll();
+
         testUser = new User();
         testUser.setEmail(TEST_USERNAME);
         testUser.setFirstName("Test");
@@ -81,13 +85,6 @@ public class LabelControllerTest {
         testLabel.setName("Test Label");
         testLabel.setCreatedAt(Instant.now());
         labelRepository.save(testLabel);
-    }
-
-    @AfterEach
-    void tearDown() {
-        taskRepository.deleteAll();
-        labelRepository.deleteAll();
-        userRepository.deleteAll();
     }
 
     private String getToken(String username, String password) throws Exception {

@@ -5,6 +5,7 @@ import hexlet.code.dto.LoginRequestDTO;
 import hexlet.code.dto.UserCreateDTO;
 import hexlet.code.dto.UserUpdateDTO;
 import hexlet.code.model.User;
+import hexlet.code.repository.TaskRepository;
 import hexlet.code.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,6 +33,9 @@ public class UserAuthorizationTest {
 
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private TaskRepository taskRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -47,6 +51,9 @@ public class UserAuthorizationTest {
 
     @BeforeEach
     void setUp() {
+        taskRepository.deleteAll();
+        userRepository.deleteAll();
+        
         user1 = new User();
         user1.setEmail(USER1_EMAIL);
         user1.setFirstName("User");
@@ -68,6 +75,7 @@ public class UserAuthorizationTest {
 
     @AfterEach
     void tearDown() {
+        taskRepository.deleteAll();
         userRepository.deleteAll();
     }
 
