@@ -8,10 +8,7 @@ import hexlet.code.exception.ResourceNotFoundException;
 import hexlet.code.model.User;
 import hexlet.code.repository.TaskRepository;
 import hexlet.code.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -21,27 +18,26 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-public class UserService implements UserServiceInterface {
+@AllArgsConstructor
+public class UserServiceImpl implements UserServiceInterface {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoderService passwordEncoder;
+    private final TaskRepository taskRepository;
 
-    @Autowired
-    private PasswordEncoderService passwordEncoder;
-    
-    @Autowired
-    private TaskRepository taskRepository;
-
+    @Override
     public List<UserDTO> getAllUsers() {
         return userRepository.findAll().stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
+    @Override
     public UserDTO getUserById(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
         return convertToDTO(user);
     }
 
+    @Override
     public UserDTO createUser(UserCreateDTO userCreateDTO) {
         User user = new User();
         user.setFirstName(userCreateDTO.getFirstName());
@@ -55,6 +51,7 @@ public class UserService implements UserServiceInterface {
         return convertToDTO(savedUser);
     }
 
+    @Override
     public UserDTO updateUser(Long id, UserUpdateDTO userUpdateDTO) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
@@ -80,6 +77,7 @@ public class UserService implements UserServiceInterface {
         return convertToDTO(updatedUser);
     }
 
+    @Override
     public void deleteUser(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
@@ -90,35 +88,6 @@ public class UserService implements UserServiceInterface {
         
         userRepository.deleteById(id);
     }
-    
-    /**
-     * Checks if the current authenticated user is authorized to perform operations on the specified user.
-     * Throws ForbiddenException if the current user is not authorized.
-     * 
-     * @param userEmail The email of the user being operated on
-     */
-     public void checkUserAuthorization(String userEmail) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return;
-        }
-
-        Object principal = authentication.getPrincipal();
-
-        if (!(principal instanceof UserDetails userDetails)) {
-            return;
-        }
-
-        String currentUserEmail = userDetails.getUsername();
-
-        if (!currentUserEmail.equals(userEmail)) {
-            throw new ForbiddenException("You are not authorized to perform this operation on this user");
-        }
-    }
-
-
-
 
     private UserDTO convertToDTO(User user) {
         UserDTO dto = new UserDTO();

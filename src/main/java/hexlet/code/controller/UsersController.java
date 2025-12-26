@@ -3,12 +3,13 @@ package hexlet.code.controller;
 import hexlet.code.dto.UserCreateDTO;
 import hexlet.code.dto.UserDTO;
 import hexlet.code.dto.UserUpdateDTO;
-import hexlet.code.service.UserService;
+import hexlet.code.service.UserServiceInterface;
 import jakarta.validation.Valid;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,10 +22,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/users")
+@AllArgsConstructor
 public class UsersController {
 
-    @Autowired
-    private UserService userService;
+    private final UserServiceInterface userService;
 
     @GetMapping
     public ResponseEntity<List<UserDTO>> getAllUsers() {
@@ -45,6 +46,7 @@ public class UsersController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("@userServiceImpl.getUserById(#id).email == authentication.name")
     public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, 
                                              @Valid @RequestBody UserUpdateDTO userUpdateDTO) {
         UserDTO updatedUser = userService.updateUser(id, userUpdateDTO);
@@ -53,6 +55,7 @@ public class UsersController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("@userServiceImpl.getUserById(#id).email == authentication.name")
     public void deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
     }
