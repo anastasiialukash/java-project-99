@@ -9,6 +9,7 @@ plugins {
     jacoco
     id("com.diffplug.spotless") version "6.25.0"
     id("io.sentry.jvm.gradle") version "5.12.2"
+    id("org.sonarqube") version "6.2.0.5505"
 }
 
 group = "hexlet.code"
@@ -64,6 +65,17 @@ tasks.test {
 tasks.jacocoTestReport {
     reports {
         xml.required.set(true)
+    }
+}
+
+sonar {
+    properties {
+        property("sonar.projectKey", "anastasiialukash_java-project-99")
+        property("sonar.organization", "anastasiialukash")
+        property("sonar.host.url", "https://sonarcloud.io")
+        property("sonar.token", System.getenv("SONAR_TOKEN"))
+        property("sonar.coverage.jacoco.xmlReportPaths",
+            "build/reports/jacoco/test/jacocoTestReport.xml")
     }
 }
 

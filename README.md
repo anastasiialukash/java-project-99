@@ -3,6 +3,8 @@
 
 https://java-project-99-yuuo.onrender.com/
 
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=anastasiialukash_java-project-99&metric=coverage)](https://sonarcloud.io/summary/new_code?id=anastasiialukash_java-project-99)
+
 ## Application Configuration Profiles
 
 This application supports multiple configuration profiles:
