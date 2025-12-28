@@ -92,9 +92,8 @@ public abstract class TaskMapper {
         if (labelIds == null) {
             return null;
         }
-        return labelIds.stream()
-                .map(id -> labelRepository.findById(id).orElse(null))
-                .filter(label -> label != null)
+        return labelRepository.findAllById(labelIds)
+                .stream()
                 .collect(Collectors.toSet());
     }
 
@@ -113,9 +112,8 @@ public abstract class TaskMapper {
         if (labelIds == null) {
             return null;
         }
-        return labelIds.stream()
-                .map(id -> labelRepository.findById(id).orElse(null))
-                .filter(label -> label != null)
+        return labelRepository.findAllById(labelIds)
+                .stream()
                 .collect(Collectors.toSet());
     }
 

@@ -105,13 +105,17 @@ public class LabelControllerTest {
     void testGetAllLabels() throws Exception {
         String token = getToken(testUser.getEmail(), TEST_PASSWORD);
         
+        List<Label> labels = labelRepository.findAll();
+        
         mockMvc.perform(get("/api/labels")
                 .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(labels.size()))
                 .andExpect(jsonPath("$[0].id").value(testLabel.getId()))
-                .andExpect(jsonPath("$[0].name").value(testLabel.getName()));
+                .andExpect(jsonPath("$[0].name").value(testLabel.getName()))
+                .andExpect(jsonPath("$[?(@.id == " + testLabel.getId() + ")].name").value(testLabel.getName()));
     }
 
     @Test

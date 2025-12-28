@@ -2,8 +2,10 @@ package hexlet.code.exception;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -38,5 +40,27 @@ public class GlobalExceptionHandler {
     @ResponseBody
     public String handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
         return "Cannot delete or update because it is referenced by other entities";
+    }
+    
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseBody
+    public String handleValidationException(MethodArgumentNotValidException ex) {
+        return "Validation error: " + ex.getMessage();
+    }
+    
+    @ExceptionHandler(AccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    @ResponseBody
+    public String handleAccessDeniedException(AccessDeniedException ex) {
+        return "Access denied: " + ex.getMessage();
+    }
+    
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ResponseBody
+    public String handleException(Exception ex) {
+        ex.printStackTrace();
+        return "Internal server error: " + ex.getMessage();
     }
 }

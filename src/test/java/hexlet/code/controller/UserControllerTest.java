@@ -1,13 +1,14 @@
 package hexlet.code.controller;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hexlet.code.dto.LoginRequestDTO;
 import hexlet.code.dto.UserCreateDTO;
+import hexlet.code.dto.UserDTO;
 import hexlet.code.dto.UserUpdateDTO;
 import hexlet.code.model.User;
 import hexlet.code.repository.TaskRepository;
 import hexlet.code.repository.UserRepository;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -92,26 +93,33 @@ public class UserControllerTest {
         userRepository.save(secondUser);
 
         List<User> usersInDb = userRepository.findAll();
-        
+
         String token = getToken(testUser.getEmail(), TEST_PASSWORD);
-        
+
         String responseJson = mockMvc.perform(get("/api/users")
-                .header("Authorization", "Bearer " + token))
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$.length()").value(usersInDb.size()))
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
 
-        for (User user : usersInDb) {
-            assertThat(responseJson).contains("\"id\":" + user.getId());
-            assertThat(responseJson).contains("\"email\":\"" + user.getEmail() + "\"");
-            assertThat(responseJson).contains("\"firstName\":\"" + user.getFirstName() + "\"");
-            assertThat(responseJson).contains("\"lastName\":\"" + user.getLastName() + "\"");
-            assertThat(responseJson).doesNotContain("\"password\"");
-        }
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
+        List<UserDTO> usersFromResponse =
+                mapper.readValue(responseJson, new TypeReference<>() {});
+
+        assertThat(usersFromResponse)
+                .hasSize(usersInDb.size())
+                .allSatisfy(user -> assertThat(user.getEmail()).isNotNull());
+
+        assertThat(usersFromResponse)
+                .extracting(UserDTO::getEmail)
+                .containsExactlyInAnyOrder(
+                        usersInDb.stream()
+                                .map(User::getEmail)
+                                .toArray(String[]::new)
+                );
     }
 
     @Test
