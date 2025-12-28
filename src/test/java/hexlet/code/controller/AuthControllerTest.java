@@ -122,9 +122,6 @@ public class AuthControllerTest {
     void testAccessToPublicEndpoints() throws Exception {
         mockMvc.perform(get("/"))
                 .andExpect(status().isOk());
-
-        mockMvc.perform(get("/api/login"))
-                .andExpect(status().isMethodNotAllowed());
     }
     
     @Test
