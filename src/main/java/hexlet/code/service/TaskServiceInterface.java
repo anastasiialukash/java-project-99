@@ -11,6 +11,6 @@ public interface TaskServiceInterface {
     List<TaskDTO> getFilteredTasks(String titleCont, Long assigneeId, String status, Long labelId);
     TaskDTO getTaskById(Long id);
     TaskDTO createTask(TaskCreateDTO taskCreateDTO);
-    TaskDTO updateTask(Long id, TaskUpdateDTO taskUpdateDTO, String username);
-    void deleteTask(Long id, String username);
+    TaskDTO updateTask(Long id, TaskUpdateDTO taskUpdateDTO);
+    void deleteTask(Long id);
 }

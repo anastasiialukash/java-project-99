@@ -8,7 +8,6 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -62,17 +61,14 @@ public class TaskController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TaskDTO> updateTask(@PathVariable Long id, @Valid @RequestBody TaskUpdateDTO taskUpdateDTO, 
-                                             Authentication authentication) {
-        String username = authentication.getName();
-        TaskDTO updatedTask = taskService.updateTask(id, taskUpdateDTO, username);
+    public ResponseEntity<TaskDTO> updateTask(@PathVariable Long id, @Valid @RequestBody TaskUpdateDTO taskUpdateDTO) {
+        TaskDTO updatedTask = taskService.updateTask(id, taskUpdateDTO);
         return ResponseEntity.ok(updatedTask);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteTask(@PathVariable Long id, Authentication authentication) {
-        String username = authentication.getName();
-        taskService.deleteTask(id, username);
+    public void deleteTask(@PathVariable Long id) {
+        taskService.deleteTask(id);
     }
 }

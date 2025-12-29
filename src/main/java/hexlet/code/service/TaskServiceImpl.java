@@ -3,7 +3,6 @@ package hexlet.code.service;
 import hexlet.code.dto.TaskCreateDTO;
 import hexlet.code.dto.TaskDTO;
 import hexlet.code.dto.TaskUpdateDTO;
-import hexlet.code.exception.ForbiddenException;
 import hexlet.code.exception.ResourceNotFoundException;
 import hexlet.code.mapper.TaskMapper;
 import hexlet.code.model.Task;
@@ -51,13 +50,9 @@ public class TaskServiceImpl implements TaskServiceInterface {
     }
 
     @Override
-    public TaskDTO updateTask(Long id, TaskUpdateDTO taskUpdateDTO, String username) {
+    public TaskDTO updateTask(Long id, TaskUpdateDTO taskUpdateDTO) {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
-
-        if (!task.getAssignee().getEmail().equals(username)) {
-            throw new ForbiddenException("You are not authorized to update this task");
-        }
 
         taskMapper.update(taskUpdateDTO, task);
         
@@ -66,13 +61,7 @@ public class TaskServiceImpl implements TaskServiceInterface {
     }
 
     @Override
-    public void deleteTask(Long id, String username) {
-        Task task = taskRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
-
-        if (!task.getAssignee().getEmail().equals(username)) {
-            throw new ForbiddenException("You are not authorized to delete this task");
-        }
+    public void deleteTask(Long id) {
         taskRepository.deleteById(id);
     }
 

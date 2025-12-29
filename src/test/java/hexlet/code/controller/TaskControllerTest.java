@@ -12,7 +12,6 @@ import hexlet.code.repository.LabelRepository;
 import hexlet.code.repository.TaskRepository;
 import hexlet.code.repository.TaskStatusRepository;
 import hexlet.code.repository.UserRepository;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -443,67 +442,5 @@ public class TaskControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(0));
-    }
-    
-    @Test
-    void testUpdateAnotherUsersTaskReturns403() throws Exception {
-        User anotherUser = new User();
-        anotherUser.setEmail("another@example.com");
-        anotherUser.setFirstName("Another");
-        anotherUser.setLastName("User");
-        anotherUser.setPassword(passwordEncoder.encode("anotherpassword"));
-        anotherUser.setCreatedAt(Instant.now());
-        anotherUser.setUpdatedAt(Instant.now());
-        userRepository.save(anotherUser);
-
-        Task anotherTask = new Task();
-        anotherTask.setName("Another User's Task");
-        anotherTask.setDescription("This task belongs to another user");
-        anotherTask.setTaskStatus(testTaskStatus);
-        anotherTask.setAssignee(anotherUser);
-        anotherTask.setCreatedAt(Instant.now());
-        taskRepository.save(anotherTask);
-
-        String token = getToken(testUser.getEmail(), TEST_PASSWORD);
-
-        TaskUpdateDTO updateTask = new TaskUpdateDTO();
-        updateTask.setTitle("Hacked Task");
-        
-        mockMvc.perform(put("/api/tasks/{id}", anotherTask.getId())
-                .header("Authorization", "Bearer " + token)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateTask)))
-                .andExpect(status().isForbidden());
-
-        Task unchangedTask = taskRepository.findById(anotherTask.getId()).orElseThrow();
-        assertThat(unchangedTask.getName()).isEqualTo(anotherTask.getName());
-    }
-    
-    @Test
-    void testDeleteAnotherUsersTaskReturns403() throws Exception {
-        User anotherUser = new User();
-        anotherUser.setEmail("another@example.com");
-        anotherUser.setFirstName("Another");
-        anotherUser.setLastName("User");
-        anotherUser.setPassword(passwordEncoder.encode("anotherpassword"));
-        anotherUser.setCreatedAt(Instant.now());
-        anotherUser.setUpdatedAt(Instant.now());
-        userRepository.save(anotherUser);
-
-        Task anotherTask = new Task();
-        anotherTask.setName("Another User's Task");
-        anotherTask.setDescription("This task belongs to another user");
-        anotherTask.setTaskStatus(testTaskStatus);
-        anotherTask.setAssignee(anotherUser);
-        anotherTask.setCreatedAt(Instant.now());
-        taskRepository.save(anotherTask);
-
-        String token = getToken(testUser.getEmail(), TEST_PASSWORD);
-
-        mockMvc.perform(delete("/api/tasks/{id}", anotherTask.getId())
-                .header("Authorization", "Bearer " + token))
-                .andExpect(status().isForbidden());
-
-        assertThat(taskRepository.existsById(anotherTask.getId())).isTrue();
     }
 }
