@@ -5,15 +5,17 @@ import hexlet.code.dto.UserDTO;
 import hexlet.code.dto.UserUpdateDTO;
 import hexlet.code.exception.ForbiddenException;
 import hexlet.code.exception.ResourceNotFoundException;
+import hexlet.code.mapper.UserMapper;
 import hexlet.code.model.User;
 import hexlet.code.repository.TaskRepository;
 import hexlet.code.repository.UserRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,31 +26,29 @@ public class UserServiceImpl implements UserServiceInterface {
     private final UserRepository userRepository;
     private final PasswordEncoderService passwordEncoder;
     private final TaskRepository taskRepository;
+    private final UserMapper userMapper;
 
     @Override
     public List<UserDTO> getAllUsers() {
-        return userRepository.findAll().stream().map(this::convertToDTO).collect(Collectors.toList());
+        return userRepository.findAll().stream()
+                .map(userMapper::map)
+                .collect(Collectors.toList());
     }
 
     @Override
     public UserDTO getUserById(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
-        return convertToDTO(user);
+        return userMapper.map(user);
     }
 
     @Override
     public UserDTO createUser(UserCreateDTO userCreateDTO) {
-        User user = new User();
-        user.setFirstName(userCreateDTO.getFirstName());
-        user.setLastName(userCreateDTO.getLastName());
-        user.setEmail(userCreateDTO.getEmail());
+        User user = userMapper.map(userCreateDTO);
         user.setPassword(passwordEncoder.encode(userCreateDTO.getPassword()));
-        user.setCreatedAt(Instant.now());
-        user.setUpdatedAt(Instant.now());
-
+        
         User savedUser = userRepository.save(user);
-        return convertToDTO(savedUser);
+        return userMapper.map(savedUser);
     }
 
     @Override
@@ -56,25 +56,15 @@ public class UserServiceImpl implements UserServiceInterface {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
 
-        if (userUpdateDTO.getFirstName() != null) {
-            user.setFirstName(userUpdateDTO.getFirstName());
-        }
-
-        if (userUpdateDTO.getLastName() != null) {
-            user.setLastName(userUpdateDTO.getLastName());
-        }
-
-        if (userUpdateDTO.getEmail() != null) {
-            user.setEmail(userUpdateDTO.getEmail());
-        }
-
+        userMapper.update(userUpdateDTO, user);
+        
         if (userUpdateDTO.getPassword() != null) {
             user.setPassword(passwordEncoder.encode(userUpdateDTO.getPassword()));
         }
 
         user.setUpdatedAt(Instant.now());
         User updatedUser = userRepository.save(user);
-        return convertToDTO(updatedUser);
+        return userMapper.map(updatedUser);
     }
 
     @Override
@@ -89,16 +79,29 @@ public class UserServiceImpl implements UserServiceInterface {
         userRepository.deleteById(id);
     }
 
-    private UserDTO convertToDTO(User user) {
-        UserDTO dto = new UserDTO();
-        dto.setId(user.getId());
-        dto.setEmail(user.getEmail());
-        dto.setFirstName(user.getFirstName());
-        dto.setLastName(user.getLastName());
+    /**
+     * Checks if the current authenticated user is authorized to perform operations on the specified user.
+     * Throws ForbiddenException if the current user is not authorized.
+     *
+     * @param userEmail The email of the user being operated on
+     */
+    public void checkUserAuthorization(String userEmail) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (user.getCreatedAt() != null) {
-            dto.setCreatedAt(LocalDate.ofInstant(user.getCreatedAt(), ZoneId.systemDefault()));
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return;
         }
-        return dto;
+
+        Object principal = authentication.getPrincipal();
+
+        if (!(principal instanceof UserDetails userDetails)) {
+            return;
+        }
+
+        String currentUserEmail = userDetails.getUsername();
+
+        if (!currentUserEmail.equals(userEmail)) {
+            throw new ForbiddenException("You are not authorized to perform this operation on this user");
+        }
     }
 }

@@ -2,10 +2,10 @@ package hexlet.code.controller;
 
 import hexlet.code.dto.LabelCreateDTO;
 import hexlet.code.dto.LabelDTO;
+import hexlet.code.mapper.LabelMapper;
 import hexlet.code.model.Label;
 import hexlet.code.service.LabelService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -28,16 +28,17 @@ import java.util.stream.Collectors;
 public class LabelController {
 
     private final LabelService labelService;
+    private final LabelMapper labelMapper;
 
-    public LabelController(LabelService labelService) {
+    public LabelController(LabelService labelService, LabelMapper labelMapper) {
         this.labelService = labelService;
+        this.labelMapper = labelMapper;
     }
 
     @GetMapping
-    public ResponseEntity<List<LabelDTO>> getAllLabels(Authentication authentication) {
-        String username = authentication.getName();
-        List<LabelDTO> labels = labelService.getAllLabels(username).stream()
-                .map(this::convertToDTO)
+    public ResponseEntity<List<LabelDTO>> getAllLabels() {
+        List<LabelDTO> labels = labelService.getAllLabels().stream()
+                .map(labelMapper::map)
                 .collect(Collectors.toList());
         return ResponseEntity.ok()
                 .header("X-Total-Count", String.valueOf(labels.size()))
@@ -45,10 +46,9 @@ public class LabelController {
     }
 
     @GetMapping("/{id}")
-    public LabelDTO getLabelById(@PathVariable Long id, Authentication authentication) {
-        String username = authentication.getName();
-        Label label = labelService.getLabelById(id, username);
-        return convertToDTO(label);
+    public LabelDTO getLabelById(@PathVariable Long id) {
+        Label label = labelService.getLabelById(id);
+        return labelMapper.map(label);
     }
 
     @PostMapping
@@ -56,14 +56,14 @@ public class LabelController {
     public LabelDTO createLabel(@Valid @RequestBody LabelCreateDTO labelCreateDTO, Authentication authentication) {
         String username = authentication.getName();
         Label label = labelService.createLabel(labelCreateDTO.getName(), username);
-        return convertToDTO(label);
+        return labelMapper.map(label);
     }
 
     @PutMapping("/{id}")
     public LabelDTO updateLabel(@PathVariable Long id, @Valid @RequestBody LabelCreateDTO labelCreateDTO, Authentication authentication) {
         String username = authentication.getName();
         Label label = labelService.updateLabel(id, labelCreateDTO.getName(), username);
-        return convertToDTO(label);
+        return labelMapper.map(label);
     }
 
     @DeleteMapping("/{id}")
@@ -73,17 +73,6 @@ public class LabelController {
         labelService.deleteLabel(id, username);
     }
 
-    private LabelDTO convertToDTO(Label label) {
-        LabelDTO dto = new LabelDTO();
-        dto.setId(label.getId());
-        dto.setName(label.getName());
-        
-        if (label.getCreatedAt() != null) {
-            dto.setCreatedAt(label.getCreatedAt());
-        }
-        
-        return dto;
-    }
     
     @ExceptionHandler(IllegalStateException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)

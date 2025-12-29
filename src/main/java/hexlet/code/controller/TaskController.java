@@ -34,10 +34,8 @@ public class TaskController {
             @RequestParam(required = false) String titleCont,
             @RequestParam(required = false) Long assigneeId,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) Long labelId,
-            Authentication authentication) {
-        
-        String username = authentication.getName();
+            @RequestParam(required = false) Long labelId) {
+
         List<TaskDTO> tasks;
 
         if (titleCont != null || assigneeId != null || status != null || labelId != null) {
@@ -52,17 +50,15 @@ public class TaskController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TaskDTO> getTaskById(@PathVariable Long id, Authentication authentication) {
-        String username = authentication.getName();
+    public ResponseEntity<TaskDTO> getTaskById(@PathVariable Long id) {
         TaskDTO task = taskService.getTaskById(id);
         return ResponseEntity.ok(task);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public TaskDTO createTask(@Valid @RequestBody TaskCreateDTO taskCreateDTO, Authentication authentication) {
-        String username = authentication.getName();
-        return taskService.createTask(taskCreateDTO, username);
+    public TaskDTO createTask(@Valid @RequestBody TaskCreateDTO taskCreateDTO) {
+        return taskService.createTask(taskCreateDTO);
     }
 
     @PutMapping("/{id}")

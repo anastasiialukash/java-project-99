@@ -4,7 +4,6 @@ import hexlet.code.dto.TaskStatusCreateDTO;
 import hexlet.code.dto.TaskStatusDTO;
 import hexlet.code.service.TaskStatusService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -57,17 +56,14 @@ public class TaskStatusController {
 
     @PutMapping("/{id}")
     public ResponseEntity<TaskStatusDTO> updateStatus(@PathVariable Long id, 
-                                                     @Valid @RequestBody TaskStatusDTO taskStatusUpdateDTO, 
-                                                     Authentication authentication) {
-        String username = authentication.getName();
-        TaskStatusDTO updatedTaskStatus = taskStatusService.updateTaskStatus(id, taskStatusUpdateDTO, username);
+                                                     @Valid @RequestBody TaskStatusDTO taskStatusUpdateDTO) {
+        TaskStatusDTO updatedTaskStatus = taskStatusService.updateTaskStatus(id, taskStatusUpdateDTO);
         return ResponseEntity.ok(updatedTaskStatus);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteTaskStatus(@PathVariable Long id, Authentication authentication) {
-        String username = authentication.getName();
-        taskStatusService.deleteTaskStatus(id, username);
+    public void deleteTaskStatus(@PathVariable Long id) {
+        taskStatusService.deleteTaskStatus(id);
     }
 }

@@ -1,5 +1,6 @@
 package hexlet.code.exception;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     @ExceptionHandler({BadCredentialsException.class, UsernameNotFoundException.class})
@@ -60,7 +62,7 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ResponseBody
     public String handleException(Exception ex) {
-        ex.printStackTrace();
+        log.error("Internal server error", ex);
         return "Internal server error: " + ex.getMessage();
     }
 }

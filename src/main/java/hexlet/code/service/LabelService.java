@@ -4,7 +4,6 @@ import hexlet.code.exception.ForbiddenException;
 import hexlet.code.exception.ResourceNotFoundException;
 import hexlet.code.model.Label;
 import hexlet.code.repository.LabelRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -14,9 +13,9 @@ import java.util.List;
 public class LabelService {
 
     private final LabelRepository labelRepository;
-    private final UserService userService;
+    private final UserServiceImpl userService;
     
-    public LabelService(LabelRepository labelRepository, UserService userService) {
+    public LabelService(LabelRepository labelRepository, UserServiceImpl userService) {
         this.labelRepository = labelRepository;
         this.userService = userService;
     }
@@ -24,24 +23,10 @@ public class LabelService {
     public List<Label> getAllLabels() {
         return labelRepository.findAll();
     }
-    
-    // Overloaded method that accepts username for consistency with other methods
-    public List<Label> getAllLabels(String username) {
-        // Currently, all users can view all labels, so we just call the original method
-        // The username parameter could be used for filtering or logging in the future
-        return getAllLabels();
-    }
 
     public Label getLabelById(Long id) {
         return labelRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Label not found with id: " + id));
-    }
-    
-    // Overloaded method that accepts username for consistency with other methods
-    public Label getLabelById(Long id, String username) {
-        // Currently, all users can view any label, so we just call the original method
-        // The username parameter could be used for authorization checks or logging in the future
-        return getLabelById(id);
     }
 
     public Label getLabelByName(String name) {

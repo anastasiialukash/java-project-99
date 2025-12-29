@@ -29,8 +29,7 @@ import java.util.stream.Collectors;
 @Mapper(
     nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
     componentModel = MappingConstants.ComponentModel.SPRING,
-    unmappedTargetPolicy = ReportingPolicy.IGNORE,
-    uses = {ReferenceMapper.class}
+    unmappedTargetPolicy = ReportingPolicy.IGNORE
 )
 public abstract class TaskMapper {
 

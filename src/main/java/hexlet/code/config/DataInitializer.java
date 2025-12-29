@@ -9,7 +9,7 @@ import hexlet.code.repository.TaskRepository;
 import hexlet.code.repository.TaskStatusRepository;
 import hexlet.code.repository.UserRepository;
 import hexlet.code.service.TaskServiceInterface;
-import hexlet.code.service.UserService;
+import hexlet.code.service.UserServiceInterface;
 import net.datafaker.Faker;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -27,7 +27,7 @@ public class DataInitializer implements ApplicationRunner {
     private final UserRepository userRepository;
     private final TaskRepository taskRepository;
     private final TaskStatusRepository taskStatusRepository;
-    private final UserService userService;
+    private final UserServiceInterface userService;
     private final TaskServiceInterface taskService;
     
     public DataInitializer(
@@ -35,7 +35,7 @@ public class DataInitializer implements ApplicationRunner {
             UserRepository userRepository,
             TaskRepository taskRepository,
             TaskStatusRepository taskStatusRepository,
-            UserService userService,
+            UserServiceInterface userService,
             TaskServiceInterface taskService) {
         this.labelRepository = labelRepository;
         this.userRepository = userRepository;
@@ -114,7 +114,7 @@ public class DataInitializer implements ApplicationRunner {
             taskCreateDTO.setContent(String.join("\n", faker.lorem().paragraphs(5)));
             taskCreateDTO.setStatus(taskStatus.getSlug());
             taskCreateDTO.setAssignee_id(user.getId());
-            taskService.createTask(taskCreateDTO, user.getEmail());
+            taskService.createTask(taskCreateDTO);
         });
     }
 }

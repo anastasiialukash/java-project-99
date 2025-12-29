@@ -3,93 +3,65 @@ package hexlet.code.service;
 import hexlet.code.dto.TaskStatusCreateDTO;
 import hexlet.code.dto.TaskStatusDTO;
 import hexlet.code.exception.ResourceNotFoundException;
+import hexlet.code.mapper.TaskStatusMapper;
 import hexlet.code.model.TaskStatus;
-import hexlet.code.repository.TaskRepository;
 import hexlet.code.repository.TaskStatusRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class TaskStatusService {
     private final TaskStatusRepository taskStatusRepository;
-    private final UserService userService;
-    private final TaskRepository taskRepository;
+    private final UserServiceImpl userService;
+    private final TaskStatusMapper taskStatusMapper;
     
-    public TaskStatusService(TaskStatusRepository taskStatusRepository, UserService userService, TaskRepository taskRepository) {
+    public TaskStatusService(
+            TaskStatusRepository taskStatusRepository, 
+            UserServiceImpl userService,
+            TaskStatusMapper taskStatusMapper) {
         this.taskStatusRepository = taskStatusRepository;
         this.userService = userService;
-        this.taskRepository = taskRepository;
+        this.taskStatusMapper = taskStatusMapper;
     }
 
     public List<TaskStatusDTO> getAllStatuses() {
-        return taskStatusRepository.findAll().stream().map(this::convertToDTO).collect(Collectors.toList());
+        return taskStatusRepository.findAll().stream()
+                .map(taskStatusMapper::map)
+                .collect(Collectors.toList());
     }
 
     public TaskStatusDTO getStatusById(Long id) {
         TaskStatus status = taskStatusRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task status not found with id: " + id));
-        return convertToDTO(status);
+        return taskStatusMapper.map(status);
     }
     
     public TaskStatusDTO getStatusBySlug(String slug) {
         TaskStatus status = taskStatusRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("Task status not found with slug: " + slug));
-        return convertToDTO(status);
+        return taskStatusMapper.map(status);
     }
 
     public TaskStatusDTO createStatus(TaskStatusCreateDTO taskStatusCreateDTO, String username) {
         userService.checkUserAuthorization(username);
         
-        TaskStatus taskStatus = new TaskStatus();
-        taskStatus.setName(taskStatusCreateDTO.getName());
-        taskStatus.setSlug(taskStatusCreateDTO.getSlug());
-        taskStatus.setCreatedAt(Instant.now());
-
+        TaskStatus taskStatus = taskStatusMapper.map(taskStatusCreateDTO);
         TaskStatus savedTaskStatus = taskStatusRepository.save(taskStatus);
-        return convertToDTO(savedTaskStatus);
+        return taskStatusMapper.map(savedTaskStatus);
     }
 
-    public TaskStatusDTO updateTaskStatus(Long id, TaskStatusDTO taskStatusUpdateDTO, String username) {
+    public TaskStatusDTO updateTaskStatus(Long id, TaskStatusDTO taskStatusUpdateDTO) {
         TaskStatus taskStatus = taskStatusRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task status not found with id: " + id));
 
-        userService.checkUserAuthorization(username);
-
-        if (taskStatusUpdateDTO.getName() != null) {
-            taskStatus.setName(taskStatusUpdateDTO.getName());
-        }
-        if (taskStatusUpdateDTO.getSlug() != null) {
-            taskStatus.setSlug(taskStatusUpdateDTO.getSlug());
-        }
-
+        taskStatusMapper.update(taskStatusUpdateDTO, taskStatus);
         TaskStatus updatedTaskStatus = taskStatusRepository.save(taskStatus);
-        return convertToDTO(updatedTaskStatus);
+        return taskStatusMapper.map(updatedTaskStatus);
     }
 
-    public void deleteTaskStatus(Long id, String username) {
-        TaskStatus taskStatus = taskStatusRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Task status not found with id: " + id));
-
-        userService.checkUserAuthorization(username);
-
+    public void deleteTaskStatus(Long id) {
         taskStatusRepository.deleteById(id);
-    }
-
-    private TaskStatusDTO convertToDTO(TaskStatus taskStatus) {
-        TaskStatusDTO dto = new TaskStatusDTO();
-        dto.setId(taskStatus.getId());
-        dto.setName(taskStatus.getName());
-        dto.setSlug(taskStatus.getSlug());
-
-        if (taskStatus.getCreatedAt() != null) {
-            dto.setCreatedAt(LocalDate.ofInstant(taskStatus.getCreatedAt(), ZoneId.systemDefault()));
-        }
-        return dto;
     }
 }
