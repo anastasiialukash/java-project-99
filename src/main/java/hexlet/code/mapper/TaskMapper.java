@@ -34,14 +34,18 @@ import java.util.stream.Collectors;
 )
 public abstract class TaskMapper {
 
+    protected TaskStatusRepository taskStatusRepository;
+    protected UserRepository userRepository;
+    protected LabelRepository labelRepository;
+    
     @Autowired
-    private TaskStatusRepository taskStatusRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private LabelRepository labelRepository;
+    public void setRepositories(TaskStatusRepository taskStatusRepository, 
+                               UserRepository userRepository, 
+                               LabelRepository labelRepository) {
+        this.taskStatusRepository = taskStatusRepository;
+        this.userRepository = userRepository;
+        this.labelRepository = labelRepository;
+    }
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "name", source = "title")

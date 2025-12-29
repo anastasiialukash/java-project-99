@@ -11,7 +11,6 @@ import hexlet.code.repository.LabelRepository;
 import hexlet.code.repository.TaskRepository;
 import hexlet.code.repository.TaskStatusRepository;
 import hexlet.code.repository.UserRepository;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +27,8 @@ import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
+import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -104,19 +105,27 @@ public class LabelControllerTest {
     @Test
     void testGetAllLabels() throws Exception {
         String token = getToken(testUser.getEmail(), TEST_PASSWORD);
-        
+
         List<Label> labels = labelRepository.findAll();
-        
+
         mockMvc.perform(get("/api/labels")
-                .header("Authorization", "Bearer " + token))
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$.length()").value(labels.size()))
-                .andExpect(jsonPath("$[0].id").value(testLabel.getId()))
-                .andExpect(jsonPath("$[0].name").value(testLabel.getName()))
-                .andExpect(jsonPath("$[?(@.id == " + testLabel.getId() + ")].name").value(testLabel.getName()));
+                .andExpect(jsonPath("$", hasSize(labels.size())))
+                .andExpect(jsonPath("$[*].id",
+                        containsInAnyOrder(
+                                labels.stream()
+                                        .map(l -> l.getId().intValue())
+                                        .toArray()
+                        )))
+                .andExpect(jsonPath("$[*].name",
+                        containsInAnyOrder(
+                                labels.stream()
+                                        .map(Label::getName)
+                                        .toArray()
+                        )));
     }
+
 
     @Test
     void testGetLabelById() throws Exception {

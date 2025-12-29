@@ -23,14 +23,15 @@ import java.util.stream.Collectors;
 @Service
 public class UserService implements UserServiceInterface {
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PasswordEncoderService passwordEncoder;
+    private final UserRepository userRepository;
+    private final PasswordEncoderService passwordEncoder;
+    private final TaskRepository taskRepository;
     
-    @Autowired
-    private TaskRepository taskRepository;
+    public UserService(UserRepository userRepository, PasswordEncoderService passwordEncoder, TaskRepository taskRepository) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.taskRepository = taskRepository;
+    }
 
     public List<UserDTO> getAllUsers() {
         return userRepository.findAll().stream().map(this::convertToDTO).collect(Collectors.toList());

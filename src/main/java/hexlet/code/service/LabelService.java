@@ -13,11 +13,13 @@ import java.util.List;
 @Service
 public class LabelService {
 
-    @Autowired
-    private LabelRepository labelRepository;
+    private final LabelRepository labelRepository;
+    private final UserService userService;
     
-    @Autowired
-    private UserService userService;
+    public LabelService(LabelRepository labelRepository, UserService userService) {
+        this.labelRepository = labelRepository;
+        this.userService = userService;
+    }
 
     public List<Label> getAllLabels() {
         return labelRepository.findAll();

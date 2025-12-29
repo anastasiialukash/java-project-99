@@ -27,8 +27,11 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/labels")
 public class LabelController {
 
-    @Autowired
-    private LabelService labelService;
+    private final LabelService labelService;
+
+    public LabelController(LabelService labelService) {
+        this.labelService = labelService;
+    }
 
     @GetMapping
     public ResponseEntity<List<LabelDTO>> getAllLabels(Authentication authentication) {

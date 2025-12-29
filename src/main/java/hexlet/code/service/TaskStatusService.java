@@ -17,14 +17,15 @@ import java.util.stream.Collectors;
 
 @Service
 public class TaskStatusService {
-    @Autowired
-    private TaskStatusRepository taskStatusRepository;
-
-    @Autowired
-    private UserService userService;
+    private final TaskStatusRepository taskStatusRepository;
+    private final UserService userService;
+    private final TaskRepository taskRepository;
     
-    @Autowired
-    private TaskRepository taskRepository;
+    public TaskStatusService(TaskStatusRepository taskStatusRepository, UserService userService, TaskRepository taskRepository) {
+        this.taskStatusRepository = taskStatusRepository;
+        this.userService = userService;
+        this.taskRepository = taskRepository;
+    }
 
     public List<TaskStatusDTO> getAllStatuses() {
         return taskStatusRepository.findAll().stream().map(this::convertToDTO).collect(Collectors.toList());
