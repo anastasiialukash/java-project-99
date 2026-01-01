@@ -8,10 +8,16 @@ import hexlet.code.mapper.TaskMapper;
 import hexlet.code.model.Task;
 import hexlet.code.repository.TaskRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static hexlet.code.specification.TaskSpecification.hasAssigneeId;
+import static hexlet.code.specification.TaskSpecification.hasLabelId;
+import static hexlet.code.specification.TaskSpecification.hasStatusSlug;
+import static hexlet.code.specification.TaskSpecification.titleContains;
 
 @Service
 @AllArgsConstructor
@@ -29,7 +35,13 @@ public class TaskServiceImpl implements TaskServiceInterface {
 
     @Override
     public List<TaskDTO> getFilteredTasks(String titleCont, Long assigneeId, String status, Long labelId) {
-        List<Task> filteredTasks = taskRepository.findByFilters(titleCont, assigneeId, status, labelId);
+        Specification<Task> spec = Specification.allOf(
+                 titleContains(titleCont),
+                 hasAssigneeId(assigneeId),
+                 hasStatusSlug(status),
+                 hasLabelId(labelId));
+
+        List<Task> filteredTasks = taskRepository.findAll(spec);
         return filteredTasks.stream()
                 .map(taskMapper::map)
                 .collect(Collectors.toList());

@@ -6,10 +6,13 @@ import hexlet.code.dto.UserUpdateDTO;
 import hexlet.code.exception.ForbiddenException;
 import hexlet.code.exception.ResourceNotFoundException;
 import hexlet.code.mapper.UserMapper;
+import hexlet.code.model.Task;
 import hexlet.code.model.User;
 import hexlet.code.repository.TaskRepository;
 import hexlet.code.repository.UserRepository;
+import hexlet.code.specification.TaskSpecification;
 import lombok.AllArgsConstructor;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -72,7 +75,9 @@ public class UserServiceImpl implements UserServiceInterface {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
 
-        if (!taskRepository.findByAssignee(user).isEmpty()) {
+        Specification<Task> spec = TaskSpecification.hasAssigneeId(user.getId());
+
+        if (!taskRepository.findAll(spec).isEmpty()) {
             throw new ForbiddenException("Cannot delete user because they are assigned to one or more tasks");
         }
         
