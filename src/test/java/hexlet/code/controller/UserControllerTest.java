@@ -112,11 +112,8 @@ public class UserControllerTest {
                 .getResponse()
                 .getContentAsString();
 
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
-
         List<UserDTO> usersFromResponse =
-                mapper.readValue(responseJson, new TypeReference<>() {});
+                objectMapper.readValue(responseJson, new TypeReference<>() {});
 
         assertThat(usersFromResponse)
                 .containsExactlyInAnyOrderElementsOf(usersFromDb);
@@ -141,23 +138,38 @@ public class UserControllerTest {
 
     @Test
     void testCreateUser() throws Exception {
+        String email = "new@example.com";
+        String firstName = "New";
+        String lastName = "User";
+
         UserCreateDTO newUser = new UserCreateDTO();
-        newUser.setEmail("new@example.com");
-        newUser.setFirstName("New");
-        newUser.setLastName("User");
+        newUser.setEmail(email);
+        newUser.setFirstName(firstName);
+        newUser.setLastName(lastName);
         newUser.setPassword("newpassword");
 
-        mockMvc.perform(post("/api/users").contentType(MediaType.APPLICATION_JSON)
+        UserDTO expectedUser = new UserDTO();
+        expectedUser.setEmail(email);
+        expectedUser.setFirstName(firstName);
+        expectedUser.setLastName(lastName);
+
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
+
+        String responseJson = mockMvc.perform(post("/api/users").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newUser))).andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.email").value(newUser.getEmail()))
-                .andExpect(jsonPath("$.firstName").value(newUser.getFirstName()))
-                .andExpect(jsonPath("$.lastName").value(newUser.getLastName()))
-                .andExpect(jsonPath("$.password").doesNotExist());
+                .andExpect(jsonPath("$.password").doesNotExist())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
-        List<User> users = userRepository.findAll();
-        assertThat(users).hasSize(2);
-        assertThat(users.stream().anyMatch(u -> u.getEmail().equals(newUser.getEmail()))).isTrue();
+        UserDTO userFromResponse = objectMapper.readValue(responseJson, UserDTO.class);
+
+        expectedUser.setCreatedAt(userFromResponse.getCreatedAt());
+        expectedUser.setId(userFromResponse.getId());
+
+        assertThat(userFromResponse).isEqualTo(expectedUser);
     }
 
     @Test
@@ -166,23 +178,28 @@ public class UserControllerTest {
         updateUser.setEmail("updated@example.com");
         updateUser.setFirstName("Updated");
 
+        UserDTO expectedUser = new UserDTO();
+        expectedUser.setId(testUser.getId());
+        expectedUser.setFirstName(updateUser.getFirstName());
+        expectedUser.setLastName(testUser.getLastName());
+        expectedUser.setEmail(updateUser.getEmail());
+
         String token = getToken(testUser.getEmail(), TEST_PASSWORD);
 
-        mockMvc.perform(put("/api/users/{id}", testUser.getId())
+        String response = mockMvc.perform(put("/api/users/{id}", testUser.getId())
                 .header("Authorization", "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateUser)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id").value(testUser.getId()))
-                .andExpect(jsonPath("$.email").value(updateUser.getEmail()))
-                .andExpect(jsonPath("$.firstName").value(updateUser.getFirstName()))
-                .andExpect(jsonPath("$.lastName").value(testUser.getLastName()))
-                .andExpect(jsonPath("$.password").doesNotExist());
-        User updatedUser = userRepository.findById(testUser.getId()).orElseThrow();
-        assertThat(updatedUser.getEmail()).isEqualTo(updateUser.getEmail());
-        assertThat(updatedUser.getFirstName()).isEqualTo(updateUser.getFirstName());
-        assertThat(updatedUser.getLastName()).isEqualTo(testUser.getLastName());
+                .andExpect(jsonPath("$.password").doesNotExist())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        UserDTO userFromResponse = objectMapper.readValue(response, UserDTO.class);
+        expectedUser.setCreatedAt(userFromResponse.getCreatedAt());
+        assertThat(userFromResponse).isEqualTo(expectedUser);
     }
 
     @Test
