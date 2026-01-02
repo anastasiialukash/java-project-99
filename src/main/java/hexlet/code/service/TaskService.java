@@ -6,7 +6,7 @@ import hexlet.code.dto.TaskUpdateDTO;
 
 import java.util.List;
 
-public interface TaskServiceInterface {
+public interface TaskService {
     List<TaskDTO> getAllTasks();
     List<TaskDTO> getFilteredTasks(String titleCont, Long assigneeId, String status, Long labelId);
     TaskDTO getTaskById(Long id);

@@ -3,7 +3,7 @@ package hexlet.code.controller;
 import hexlet.code.dto.TaskCreateDTO;
 import hexlet.code.dto.TaskDTO;
 import hexlet.code.dto.TaskUpdateDTO;
-import hexlet.code.service.TaskServiceInterface;
+import hexlet.code.service.TaskService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -26,7 +26,7 @@ import java.util.List;
 @AllArgsConstructor
 public class TaskController {
 
-    private final TaskServiceInterface taskService;
+    private final TaskService taskService;
 
     @GetMapping
     public ResponseEntity<List<TaskDTO>> getAllTasks(
@@ -35,13 +35,9 @@ public class TaskController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) Long labelId) {
 
-        List<TaskDTO> tasks;
-
-        if (titleCont != null || assigneeId != null || status != null || labelId != null) {
-            tasks = taskService.getFilteredTasks(titleCont, assigneeId, status, labelId);
-        } else {
-            tasks = taskService.getAllTasks();
-        }
+        List<TaskDTO> tasks = taskService.getFilteredTasks(
+                titleCont, assigneeId, status, labelId
+        );
         
         return ResponseEntity.ok()
                 .header("X-Total-Count", String.valueOf(tasks.size()))

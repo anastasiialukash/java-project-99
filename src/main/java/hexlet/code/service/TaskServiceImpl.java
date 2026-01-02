@@ -21,7 +21,7 @@ import static hexlet.code.specification.TaskSpecification.titleContains;
 
 @Service
 @AllArgsConstructor
-public class TaskServiceImpl implements TaskServiceInterface {
+public class TaskServiceImpl implements TaskService {
 
     private final TaskRepository taskRepository;
     private final TaskMapper taskMapper;

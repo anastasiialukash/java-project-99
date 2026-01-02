@@ -6,6 +6,7 @@ import hexlet.code.dto.LoginRequestDTO;
 import hexlet.code.dto.UserCreateDTO;
 import hexlet.code.dto.UserDTO;
 import hexlet.code.dto.UserUpdateDTO;
+import hexlet.code.mapper.UserMapper;
 import hexlet.code.model.User;
 import hexlet.code.repository.TaskRepository;
 import hexlet.code.repository.UserRepository;
@@ -17,6 +18,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.time.Instant;
 import java.util.List;
@@ -51,6 +53,8 @@ public class UserControllerTest {
 
     private User testUser;
     private final String TEST_PASSWORD = "password";
+    @Autowired
+    private UserMapper userMapper;
 
     @BeforeEach
     void setUp() {
@@ -94,6 +98,10 @@ public class UserControllerTest {
 
         List<User> usersInDb = userRepository.findAll();
 
+        List<UserDTO> usersFromDb = usersInDb.stream()
+                .map(userMapper::map)
+                .toList();
+
         String token = getToken(testUser.getEmail(), TEST_PASSWORD);
 
         String responseJson = mockMvc.perform(get("/api/users")
@@ -106,35 +114,29 @@ public class UserControllerTest {
 
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
+
         List<UserDTO> usersFromResponse =
                 mapper.readValue(responseJson, new TypeReference<>() {});
 
         assertThat(usersFromResponse)
-                .hasSize(usersInDb.size())
-                .allSatisfy(user -> assertThat(user.getEmail()).isNotNull());
-
-        assertThat(usersFromResponse)
-                .extracting(UserDTO::getEmail)
-                .containsExactlyInAnyOrder(
-                        usersInDb.stream()
-                                .map(User::getEmail)
-                                .toArray(String[]::new)
-                );
+                .containsExactlyInAnyOrderElementsOf(usersFromDb);
     }
 
     @Test
     void testGetUserById() throws Exception {
         String token = getToken(testUser.getEmail(), TEST_PASSWORD);
         
-        mockMvc.perform(get("/api/users/{id}", testUser.getId())
+        MvcResult result = mockMvc.perform(get("/api/users/{id}", testUser.getId())
                 .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id").value(testUser.getId()))
-                .andExpect(jsonPath("$.email").value(testUser.getEmail()))
-                .andExpect(jsonPath("$.firstName").value(testUser.getFirstName()))
-                .andExpect(jsonPath("$.lastName").value(testUser.getLastName()))
-                .andExpect(jsonPath("$.password").doesNotExist());
+                .andExpect(jsonPath("$.password").doesNotExist())
+                .andReturn();
+
+        String json = result.getResponse().getContentAsString();
+
+        UserDTO actual = objectMapper.readValue(json, UserDTO.class);
+        UserDTO expected = userMapper.map(testUser);
+        assertThat(actual).isEqualTo(expected);
     }
 
     @Test

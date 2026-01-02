@@ -8,8 +8,8 @@ import hexlet.code.repository.LabelRepository;
 import hexlet.code.repository.TaskRepository;
 import hexlet.code.repository.TaskStatusRepository;
 import hexlet.code.repository.UserRepository;
-import hexlet.code.service.TaskServiceInterface;
-import hexlet.code.service.UserServiceInterface;
+import hexlet.code.service.TaskService;
+import hexlet.code.service.UserService;
 import net.datafaker.Faker;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -27,16 +27,16 @@ public class DataInitializer implements ApplicationRunner {
     private final UserRepository userRepository;
     private final TaskRepository taskRepository;
     private final TaskStatusRepository taskStatusRepository;
-    private final UserServiceInterface userService;
-    private final TaskServiceInterface taskService;
+    private final UserService userService;
+    private final TaskService taskService;
     
     public DataInitializer(
             LabelRepository labelRepository,
             UserRepository userRepository,
             TaskRepository taskRepository,
             TaskStatusRepository taskStatusRepository,
-            UserServiceInterface userService,
-            TaskServiceInterface taskService) {
+            UserService userService,
+            TaskService taskService) {
         this.labelRepository = labelRepository;
         this.userRepository = userRepository;
         this.taskRepository = taskRepository;
