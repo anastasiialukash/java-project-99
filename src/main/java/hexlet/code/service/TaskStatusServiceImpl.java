@@ -14,15 +14,12 @@ import java.util.stream.Collectors;
 @Service
 public class TaskStatusServiceImpl implements TaskStatusService {
     private final TaskStatusRepository taskStatusRepository;
-    private final UserServiceImpl userService;
     private final TaskStatusMapper taskStatusMapper;
     
     public TaskStatusServiceImpl(
-            TaskStatusRepository taskStatusRepository, 
-            UserServiceImpl userService,
+            TaskStatusRepository taskStatusRepository,
             TaskStatusMapper taskStatusMapper) {
         this.taskStatusRepository = taskStatusRepository;
-        this.userService = userService;
         this.taskStatusMapper = taskStatusMapper;
     }
 
@@ -45,8 +42,6 @@ public class TaskStatusServiceImpl implements TaskStatusService {
     }
 
     public TaskStatusDTO createStatus(TaskStatusCreateDTO taskStatusCreateDTO, String username) {
-        userService.checkUserAuthorization(username);
-        
         TaskStatus taskStatus = taskStatusMapper.map(taskStatusCreateDTO);
         TaskStatus savedTaskStatus = taskStatusRepository.save(taskStatus);
         return taskStatusMapper.map(savedTaskStatus);

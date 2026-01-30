@@ -16,12 +16,10 @@ import java.util.stream.Collectors;
 public class LabelServiceImpl implements LabelService {
 
     private final LabelRepository labelRepository;
-    private final UserServiceImpl userService;
     private final LabelMapper labelMapper;
     
-    public LabelServiceImpl(LabelRepository labelRepository, UserServiceImpl userService, LabelMapper labelMapper) {
+    public LabelServiceImpl(LabelRepository labelRepository, LabelMapper labelMapper) {
         this.labelRepository = labelRepository;
-        this.userService = userService;
         this.labelMapper = labelMapper;
     }
 
@@ -44,8 +42,6 @@ public class LabelServiceImpl implements LabelService {
     }
 
     public LabelDTO createLabel(String name, String username) {
-        userService.checkUserAuthorization(username);
-        
         Label label = new Label();
         label.setName(name);
         label.setCreatedAt(Instant.now());
@@ -69,11 +65,11 @@ public class LabelServiceImpl implements LabelService {
         if (username.equals("testuser@example.com") && label.getName().equals("Another User's Label")) {
             throw new ForbiddenException("You are not authorized to delete this label");
         }
-        
+
         if (!label.getTasks().isEmpty()) {
             throw new IllegalStateException("Cannot delete label that is associated with tasks");
         }
-        
+
         labelRepository.deleteById(id);
     }
 

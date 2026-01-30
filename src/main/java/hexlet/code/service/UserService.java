@@ -12,5 +12,4 @@ public interface UserService {
     UserDTO createUser(UserCreateDTO userCreateDTO);
     UserDTO updateUser(Long id, UserUpdateDTO userUpdateDTO);
     void deleteUser(Long id);
-    void checkUserAuthorization(String userEmail);
 }

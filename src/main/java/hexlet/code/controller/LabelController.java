@@ -2,6 +2,7 @@ package hexlet.code.controller;
 
 import hexlet.code.dto.LabelCreateDTO;
 import hexlet.code.dto.LabelDTO;
+import hexlet.code.service.LabelService;
 import hexlet.code.service.LabelServiceImpl;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -24,7 +25,7 @@ import java.util.List;
 @RequestMapping("/api/labels")
 public class LabelController {
 
-    private final LabelServiceImpl labelService;
+    private final LabelService labelService;
 
     public LabelController(LabelServiceImpl labelService) {
         this.labelService = labelService;
